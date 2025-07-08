@@ -9,34 +9,35 @@ import { Plus, X, Phone, MessageCircle } from 'lucide-react';
 
 interface PropertyFormProps {
   onClose: () => void;
+  property?: any; // Optional property for editing
 }
 
-const PropertyForm = ({ onClose }: PropertyFormProps) => {
+const PropertyForm = ({ onClose, property }: PropertyFormProps) => {
   const [formData, setFormData] = useState({
-    title: '',
-    price: '',
-    description: '',
-    bedrooms: '',
-    bathrooms: '',
-    sqft: '',
-    yearBuilt: '',
-    video360Url: '',
-    images: [] as string[],
-    contactPhones: [''],
+    title: property?.title || '',
+    price: property?.price || '',
+    description: property?.description || '',
+    bedrooms: property?.bedrooms || '',
+    bathrooms: property?.bathrooms || '',
+    sqft: property?.sqft || '',
+    yearBuilt: property?.yearBuilt || '',
+    video360Url: property?.video360Url || '',
+    images: property?.images || [] as string[],
+    contactPhones: property?.contactPhones || [''],
     socialMedia: {
-      facebook: '',
-      instagram: '',
-      twitter: '',
-      whatsapp: ''
+      facebook: property?.socialMedia?.facebook || '',
+      instagram: property?.socialMedia?.instagram || '',
+      twitter: property?.socialMedia?.twitter || '',
+      whatsapp: property?.socialMedia?.whatsapp || ''
     },
-    selectedAmenities: [] as string[],
+    selectedAmenities: property?.selectedAmenities || [] as string[],
     location: {
-      country: 'Kenya',
-      city: '',
-      area: '',
-      subArea: ''
+      country: property?.location?.country || 'Kenya',
+      city: property?.location?.city || '',
+      area: property?.location?.area || '',
+      subArea: property?.location?.subArea || ''
     },
-    category: ''
+    category: property?.category || ''
   });
 
   const mockAmenities = [
