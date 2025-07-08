@@ -45,6 +45,12 @@
     --sidebar-accent-foreground: 0 0% 0%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 180 95% 19%;
+
+    /* Brand colors using HSL values */
+    --brand-green: 180 95% 19%;
+    --brand-orange: 25 100% 50%;
+    --brand-black: 0 0% 0%;
+    --brand-white: 0 0% 100%;
   }
 
   .dark {
@@ -83,6 +89,12 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 180 95% 19%;
+
+    /* Brand colors for dark mode */
+    --brand-green: 180 95% 19%;
+    --brand-orange: 25 100% 50%;
+    --brand-black: 0 0% 0%;
+    --brand-white: 0 0% 100%;
   }
 }
 

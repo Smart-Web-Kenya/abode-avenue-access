@@ -63,12 +63,12 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Brand colors using your palette
+				// Brand colors using HSL values from CSS variables
 				brand: {
-					green: '#036153',
-					orange: '#FF6500',
-					black: '#000000',
-					white: '#FFFFFF'
+					green: 'hsl(var(--brand-green))',
+					orange: 'hsl(var(--brand-orange))',
+					black: 'hsl(var(--brand-black))',
+					white: 'hsl(var(--brand-white))'
 				}
 			},
 			borderRadius: {
