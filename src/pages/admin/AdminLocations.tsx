@@ -7,11 +7,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { Plus, Edit, Trash2, MapPin } from 'lucide-react';
 
 const AdminLocations = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [selectedLevel, setSelectedLevel] = useState('country');
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<any>(null);
   const [newLocation, setNewLocation] = useState({
     name: '',
     parent: '',
@@ -49,7 +51,8 @@ const AdminLocations = () => {
         level: 'Country',
         parent: '',
         children: Object.keys(locationHierarchy[country as keyof typeof locationHierarchy]).length,
-        properties: 156
+        properties: 156,
+        active: true
       });
 
       // Cities
@@ -60,7 +63,8 @@ const AdminLocations = () => {
           level: 'City',
           parent: country,
           children: Object.keys(locationHierarchy[country as keyof typeof locationHierarchy][city as keyof typeof locationHierarchy[typeof country]]).length,
-          properties: Math.floor(Math.random() * 50) + 10
+          properties: Math.floor(Math.random() * 50) + 10,
+          active: Math.random() > 0.2
         });
 
         // Areas
@@ -69,9 +73,10 @@ const AdminLocations = () => {
             id: `area-${area}`,
             name: area,
             level: 'Area',
-            parent: `${country} > ${city}`,
+            parent: `${country} - ${city}`,
             children: locationHierarchy[country as keyof typeof locationHierarchy][city as keyof typeof locationHierarchy[typeof country]][area as keyof typeof locationHierarchy[typeof country][typeof city]].length,
-            properties: Math.floor(Math.random() * 20) + 5
+            properties: Math.floor(Math.random() * 20) + 5,
+            active: Math.random() > 0.2
           });
 
           // Sub Areas
@@ -80,9 +85,10 @@ const AdminLocations = () => {
               id: `subarea-${subArea}`,
               name: subArea,
               level: 'Sub Area',
-              parent: `${country} > ${city} > ${area}`,
+              parent: `${country} - ${city} - ${area}`,
               children: 0,
-              properties: Math.floor(Math.random() * 10) + 1
+              properties: Math.floor(Math.random() * 10) + 1,
+              active: Math.random() > 0.2
             });
           });
         });
@@ -98,10 +104,23 @@ const AdminLocations = () => {
     const colors = {
       'Country': 'bg-purple-100 text-purple-800',
       'City': 'bg-blue-100 text-blue-800',
-      'Area': 'bg-green-100 text-green-800',
-      'Sub Area': 'bg-orange-100 text-orange-800'
+      'Area': 'bg-brand-green/10 text-brand-green',
+      'Sub Area': 'bg-brand-orange/10 text-brand-orange'
     };
     return colors[level as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+  };
+
+  const handleEdit = (location: any) => {
+    setSelectedLocation(location);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDelete = (locationId: string) => {
+    console.log('Deleting location:', locationId);
+  };
+
+  const handleToggleStatus = (locationId: string, currentStatus: boolean) => {
+    console.log('Toggling status for location:', locationId, 'from', currentStatus, 'to', !currentStatus);
   };
 
   return (
@@ -114,7 +133,7 @@ const AdminLocations = () => {
           </div>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-teal-600 hover:bg-teal-700">
+              <Button className="bg-brand-green hover:bg-brand-green/90">
                 <Plus className="h-4 w-4 mr-2" />
                 Add Location
               </Button>
@@ -160,8 +179,8 @@ const AdminLocations = () => {
                     >
                       <option value="">Select Parent Location</option>
                       <option value="Kenya">Kenya</option>
-                      <option value="Kenya > Nairobi">Kenya > Nairobi</option>
-                      <option value="Kenya > Mombasa">Kenya > Mombasa</option>
+                      <option value="Kenya - Nairobi">Kenya - Nairobi</option>
+                      <option value="Kenya - Mombasa">Kenya - Mombasa</option>
                     </select>
                   </div>
                 )}
@@ -170,7 +189,7 @@ const AdminLocations = () => {
                   <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                     Cancel
                   </Button>
-                  <Button className="bg-teal-600 hover:bg-teal-700">
+                  <Button className="bg-brand-green hover:bg-brand-green/90">
                     Add Location
                   </Button>
                 </div>
@@ -195,69 +214,17 @@ const AdminLocations = () => {
           </Card>
           <Card>
             <CardContent className="p-6">
-              <div className="text-2xl font-bold text-green-600">7</div>
+              <div className="text-2xl font-bold text-brand-green">7</div>
               <p className="text-sm text-gray-600">Areas</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-6">
-              <div className="text-2xl font-bold text-orange-600">19</div>
+              <div className="text-2xl font-bold text-brand-orange">19</div>
               <p className="text-sm text-gray-600">Sub Areas</p>
             </CardContent>
           </Card>
         </div>
-
-        {/* Location Hierarchy Visualization */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Location Hierarchy</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {Object.keys(locationHierarchy).map(country => (
-                <div key={country} className="border rounded-lg p-4">
-                  <div className="flex items-center space-x-2 mb-3">
-                    <MapPin className="h-5 w-5 text-purple-600" />
-                    <span className="font-bold text-lg">{country}</span>
-                    <Badge className="bg-purple-100 text-purple-800">Country</Badge>
-                  </div>
-                  
-                  <div className="ml-6 space-y-3">
-                    {Object.keys(locationHierarchy[country as keyof typeof locationHierarchy]).map(city => (
-                      <div key={city} className="border-l-2 border-gray-200 pl-4">
-                        <div className="flex items-center space-x-2 mb-2">
-                          <MapPin className="h-4 w-4 text-blue-600" />
-                          <span className="font-semibold">{city}</span>
-                          <Badge className="bg-blue-100 text-blue-800">City</Badge>
-                        </div>
-                        
-                        <div className="ml-4 space-y-2">
-                          {Object.keys(locationHierarchy[country as keyof typeof locationHierarchy][city as keyof typeof locationHierarchy[typeof country]]).map(area => (
-                            <div key={area} className="border-l-2 border-gray-100 pl-3">
-                              <div className="flex items-center space-x-2 mb-1">
-                                <MapPin className="h-3 w-3 text-green-600" />
-                                <span className="text-sm font-medium">{area}</span>
-                                <Badge variant="outline" className="text-xs">Area</Badge>
-                              </div>
-                              
-                              <div className="ml-3 flex flex-wrap gap-1">
-                                {locationHierarchy[country as keyof typeof locationHierarchy][city as keyof typeof locationHierarchy[typeof country]][area as keyof typeof locationHierarchy[typeof country][typeof city]].map(subArea => (
-                                  <Badge key={subArea} variant="outline" className="text-xs bg-orange-50">
-                                    {subArea}
-                                  </Badge>
-                                ))}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
 
         {/* All Locations Table */}
         <Card>
@@ -286,11 +253,15 @@ const AdminLocations = () => {
                       {location.children > 0 && `${location.children} children • `}
                       {location.properties} properties
                     </div>
-                    <div className="flex space-x-1">
-                      <Button variant="ghost" size="sm">
+                    <div className="flex items-center space-x-2">
+                      <Switch 
+                        checked={location.active}
+                        onCheckedChange={(checked) => handleToggleStatus(location.id, location.active)}
+                      />
+                      <Button variant="ghost" size="sm" onClick={() => handleEdit(location)}>
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" className="text-red-600">
+                      <Button variant="ghost" size="sm" className="text-red-600" onClick={() => handleDelete(location.id)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -300,6 +271,34 @@ const AdminLocations = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Edit Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Location</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="editLocationName">Location Name</Label>
+                <Input
+                  id="editLocationName"
+                  value={selectedLocation?.name || ''}
+                  onChange={(e) => setSelectedLocation(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="e.g., Nairobi"
+                />
+              </div>
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button className="bg-brand-green hover:bg-brand-green/90">
+                  Update Location
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );

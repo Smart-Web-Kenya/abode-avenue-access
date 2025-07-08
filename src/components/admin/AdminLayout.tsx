@@ -46,7 +46,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                 className="h-10 w-auto"
               />
               <div className="hidden sm:block">
-                <Badge variant="secondary" className="bg-teal-100 text-teal-800">
+                <Badge variant="secondary" className="bg-brand-green/10 text-brand-green border-brand-green/20">
                   Admin Portal
                 </Badge>
               </div>
@@ -59,7 +59,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
               </Button>
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-5 w-5" />
-                <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 h-4 w-4 bg-brand-orange rounded-full text-xs text-white flex items-center justify-center">
                   3
                 </span>
               </Button>
@@ -84,7 +84,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                       to={item.href}
                       className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${
                         isActive
-                          ? 'bg-teal-100 text-teal-700 border-r-2 border-teal-500'
+                          ? 'bg-brand-green/10 text-brand-green border-r-2 border-brand-green'
                           : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >
