@@ -10,6 +10,14 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Plus, Edit, Trash2, MapPin } from 'lucide-react';
 
+type LocationHierarchy = {
+  [country: string]: {
+    [city: string]: {
+      [area: string]: string[];
+    };
+  };
+};
+
 const AdminLocations = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -20,7 +28,7 @@ const AdminLocations = () => {
     level: 'country'
   });
 
-  const locationHierarchy = {
+  const locationHierarchy: LocationHierarchy = {
     Kenya: {
       Nairobi: {
         Westlands: ['Parklands', 'Kangemi', 'Mountain View'],
@@ -45,42 +53,45 @@ const AdminLocations = () => {
     
     // Countries
     Object.keys(locationHierarchy).forEach(country => {
+      const countryData = locationHierarchy[country];
       locations.push({
         id: `country-${country}`,
         name: country,
         level: 'Country',
         parent: '',
-        children: Object.keys(locationHierarchy[country as keyof typeof locationHierarchy]).length,
+        children: Object.keys(countryData).length,
         properties: 156,
         active: true
       });
 
       // Cities
-      Object.keys(locationHierarchy[country as keyof typeof locationHierarchy]).forEach(city => {
+      Object.keys(countryData).forEach(city => {
+        const cityData = countryData[city];
         locations.push({
           id: `city-${city}`,
           name: city,
           level: 'City',
           parent: country,
-          children: Object.keys(locationHierarchy[country as keyof typeof locationHierarchy][city as keyof typeof locationHierarchy[typeof country]]).length,
+          children: Object.keys(cityData).length,
           properties: Math.floor(Math.random() * 50) + 10,
           active: Math.random() > 0.2
         });
 
         // Areas
-        Object.keys(locationHierarchy[country as keyof typeof locationHierarchy][city as keyof typeof locationHierarchy[typeof country]]).forEach(area => {
+        Object.keys(cityData).forEach(area => {
+          const areaData = cityData[area];
           locations.push({
             id: `area-${area}`,
             name: area,
             level: 'Area',
             parent: `${country} - ${city}`,
-            children: locationHierarchy[country as keyof typeof locationHierarchy][city as keyof typeof locationHierarchy[typeof country]][area as keyof typeof locationHierarchy[typeof country][typeof city]].length,
+            children: areaData.length,
             properties: Math.floor(Math.random() * 20) + 5,
             active: Math.random() > 0.2
           });
 
           // Sub Areas
-          locationHierarchy[country as keyof typeof locationHierarchy][city as keyof typeof locationHierarchy[typeof country]][area as keyof typeof locationHierarchy[typeof country][typeof city]].forEach(subArea => {
+          areaData.forEach(subArea => {
             locations.push({
               id: `subarea-${subArea}`,
               name: subArea,
