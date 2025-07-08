@@ -8,12 +8,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Switch } from '@/components/ui/switch';
 import { Plus, Edit, Trash2, Eye, Search } from 'lucide-react';
 import PropertyForm from '@/components/admin/PropertyForm';
 
 const AdminProperties = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState<any>(null);
 
   // Mock data
   const properties = [
@@ -25,7 +28,8 @@ const AdminProperties = () => {
       status: 'Available',
       category: '2 Bedroom',
       dateAdded: '2024-01-15',
-      views: 245
+      views: 245,
+      active: true
     },
     {
       id: 2,
@@ -35,7 +39,8 @@ const AdminProperties = () => {
       status: 'Sold',
       category: 'Maisonette',
       dateAdded: '2024-01-10',
-      views: 189
+      views: 189,
+      active: true
     },
     {
       id: 3,
@@ -45,7 +50,8 @@ const AdminProperties = () => {
       status: 'Available',
       category: 'Bungalow',
       dateAdded: '2024-01-08',
-      views: 356
+      views: 356,
+      active: false
     }
   ];
 
@@ -58,6 +64,19 @@ const AdminProperties = () => {
     return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
 
+  const handleEdit = (property: any) => {
+    setSelectedProperty(property);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDelete = (propertyId: number) => {
+    console.log('Deleting property:', propertyId);
+  };
+
+  const handleToggleStatus = (propertyId: number, currentStatus: boolean) => {
+    console.log('Toggling status for property:', propertyId, 'from', currentStatus, 'to', !currentStatus);
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -68,7 +87,7 @@ const AdminProperties = () => {
           </div>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-teal-600 hover:bg-teal-700">
+              <Button className="bg-brand-green hover:bg-brand-green/90">
                 <Plus className="h-4 w-4 mr-2" />
                 Add Property
               </Button>
@@ -145,14 +164,18 @@ const AdminProperties = () => {
                     <TableCell>{property.category}</TableCell>
                     <TableCell>{property.views}</TableCell>
                     <TableCell>
-                      <div className="flex space-x-2">
+                      <div className="flex items-center space-x-2">
+                        <Switch 
+                          checked={property.active}
+                          onCheckedChange={(checked) => handleToggleStatus(property.id, property.active)}
+                        />
                         <Button variant="ghost" size="sm">
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" onClick={() => handleEdit(property)}>
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" className="text-red-600">
+                        <Button variant="ghost" size="sm" className="text-red-600" onClick={() => handleDelete(property.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -163,6 +186,16 @@ const AdminProperties = () => {
             </Table>
           </CardContent>
         </Card>
+
+        {/* Edit Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Property</DialogTitle>
+            </DialogHeader>
+            <PropertyForm property={selectedProperty} onClose={() => setIsEditDialogOpen(false)} />
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );

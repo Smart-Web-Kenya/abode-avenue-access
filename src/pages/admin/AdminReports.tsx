@@ -3,6 +3,7 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Download, TrendingUp, TrendingDown, Eye, DollarSign } from 'lucide-react';
 
 const AdminReports = () => {
@@ -21,7 +22,9 @@ const AdminReports = () => {
       price: 450000,
       agent: 'John Doe',
       date: '2024-01-20',
-      commission: 22500
+      commission: 22500,
+      location: 'Nairobi, Westlands',
+      buyer: 'Alice Johnson'
     },
     {
       id: 2,
@@ -29,7 +32,9 @@ const AdminReports = () => {
       price: 750000,
       agent: 'Jane Smith',
       date: '2024-01-18',
-      commission: 37500
+      commission: 37500,
+      location: 'Nairobi, Karen',
+      buyer: 'Bob Wilson'
     },
     {
       id: 3,
@@ -37,7 +42,29 @@ const AdminReports = () => {
       price: 1200000,
       agent: 'Mike Wilson',
       date: '2024-01-15',
-      commission: 60000
+      commission: 60000,
+      location: 'Nairobi, Runda',
+      buyer: 'Carol Davis'
+    },
+    {
+      id: 4,
+      property: 'City Apartment',
+      price: 320000,
+      agent: 'Sarah Brown',
+      date: '2024-01-12',
+      commission: 16000,
+      location: 'Nairobi, CBD',
+      buyer: 'David Miller'
+    },
+    {
+      id: 5,
+      property: 'Suburban House',
+      price: 580000,
+      agent: 'Tom Anderson',
+      date: '2024-01-10',
+      commission: 29000,
+      location: 'Nairobi, Kileleshwa',
+      buyer: 'Eva Martinez'
     }
   ];
 
@@ -45,6 +72,14 @@ const AdminReports = () => {
     { name: 'Mike Wilson', sales: 15, revenue: 3200000 },
     { name: 'Jane Smith', sales: 12, revenue: 2800000 },
     { name: 'John Doe', sales: 10, revenue: 2100000 }
+  ];
+
+  const propertyViews = [
+    { property: 'Luxury Villa Runda', views: 1245, inquiries: 23, conversion: '1.8%' },
+    { property: 'Modern Apartment CBD', views: 987, inquiries: 18, conversion: '1.8%' },
+    { property: 'Family Home Karen', views: 856, inquiries: 15, conversion: '1.8%' },
+    { property: 'Studio Westlands', views: 743, inquiries: 12, conversion: '1.6%' },
+    { property: 'Townhouse Lavington', views: 632, inquiries: 9, conversion: '1.4%' }
   ];
 
   return (
@@ -55,7 +90,7 @@ const AdminReports = () => {
             <h1 className="text-3xl font-bold text-gray-900">Reports & Analytics</h1>
             <p className="text-gray-600 mt-2">Track performance and generate insights</p>
           </div>
-          <Button className="bg-teal-600 hover:bg-teal-700">
+          <Button className="bg-brand-green hover:bg-brand-green/90">
             <Download className="h-4 w-4 mr-2" />
             Export Report
           </Button>
@@ -102,9 +137,9 @@ const AdminReports = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">Active Listings</p>
-                  <p className="text-2xl font-bold text-teal-600">{reportData.activeListings}</p>
+                  <p className="text-2xl font-bold text-brand-green">{reportData.activeListings}</p>
                 </div>
-                <Eye className="h-8 w-8 text-teal-600" />
+                <Eye className="h-8 w-8 text-brand-green" />
               </div>
               <div className="flex items-center mt-2">
                 <TrendingUp className="h-4 w-4 text-green-600 mr-1" />
@@ -134,9 +169,9 @@ const AdminReports = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">Conversion Rate</p>
-                  <p className="text-2xl font-bold text-orange-600">{reportData.conversionRate}%</p>
+                  <p className="text-2xl font-bold text-brand-orange">{reportData.conversionRate}%</p>
                 </div>
-                <TrendingUp className="h-8 w-8 text-orange-600" />
+                <TrendingUp className="h-8 w-8 text-brand-orange" />
               </div>
               <div className="flex items-center mt-2">
                 <TrendingUp className="h-4 w-4 text-green-600 mr-1" />
@@ -146,69 +181,106 @@ const AdminReports = () => {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Recent Sales */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Sales</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
+        {/* Recent Sales Table */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Sales Report</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Property</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Price</TableHead>
+                  <TableHead>Agent</TableHead>
+                  <TableHead>Buyer</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Commission</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {recentSales.map((sale) => (
-                  <div key={sale.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex-1">
-                      <p className="font-medium">{sale.property}</p>
-                      <p className="text-sm text-gray-500">Sold by {sale.agent} on {sale.date}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-green-600">${sale.price.toLocaleString()}</p>
-                      <p className="text-sm text-gray-500">Commission: ${sale.commission.toLocaleString()}</p>
-                    </div>
-                  </div>
+                  <TableRow key={sale.id}>
+                    <TableCell className="font-medium">{sale.property}</TableCell>
+                    <TableCell>{sale.location}</TableCell>
+                    <TableCell className="font-bold text-green-600">${sale.price.toLocaleString()}</TableCell>
+                    <TableCell>{sale.agent}</TableCell>
+                    <TableCell>{sale.buyer}</TableCell>
+                    <TableCell>{sale.date}</TableCell>
+                    <TableCell className="font-medium">${sale.commission.toLocaleString()}</TableCell>
+                  </TableRow>
                 ))}
-              </div>
-            </CardContent>
-          </Card>
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
 
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Top Performers */}
           <Card>
             <CardHeader>
               <CardTitle>Top Performing Agents</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {topPerformers.map((performer, index) => (
-                  <div key={performer.name} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <Badge className="bg-teal-100 text-teal-800">
-                        #{index + 1}
-                      </Badge>
-                      <div>
-                        <p className="font-medium">{performer.name}</p>
-                        <p className="text-sm text-gray-500">{performer.sales} sales</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold">${performer.revenue.toLocaleString()}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Rank</TableHead>
+                    <TableHead>Agent</TableHead>
+                    <TableHead>Sales</TableHead>
+                    <TableHead>Revenue</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {topPerformers.map((performer, index) => (
+                    <TableRow key={performer.name}>
+                      <TableCell>
+                        <Badge className="bg-brand-green/10 text-brand-green">
+                          #{index + 1}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="font-medium">{performer.name}</TableCell>
+                      <TableCell>{performer.sales}</TableCell>
+                      <TableCell className="font-bold">${performer.revenue.toLocaleString()}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          {/* Property Views Report */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Property Views & Conversions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Property</TableHead>
+                    <TableHead>Views</TableHead>
+                    <TableHead>Inquiries</TableHead>
+                    <TableHead>Conversion</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {propertyViews.map((property, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="font-medium">{property.property}</TableCell>
+                      <TableCell>{property.views.toLocaleString()}</TableCell>
+                      <TableCell>{property.inquiries}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{property.conversion}</Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </div>
-
-        {/* Charts placeholder */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Sales Analytics</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
-              <p className="text-gray-500">Sales charts would be displayed here</p>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </AdminLayout>
   );
