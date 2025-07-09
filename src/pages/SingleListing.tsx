@@ -40,9 +40,9 @@ const SingleListing = () => {
       { name: "Parking Space", icon: Car }
     ],
     agent: {
-      name: "Sarah Johnson",
-      email: "sarah@meritafricahomes.com",
-      phone: "+1 (555) 123-4567",
+      name: "Josh Minga",
+      email: "joshlminga@meritafricahomes.com",
+      phone: "+254 708 549 604",
       image: "https://images.unsplash.com/photo-1472396961693-142e6e269027?w=200&h=200&fit=crop&crop=face"
     }
   };
@@ -109,7 +109,7 @@ const SingleListing = () => {
                   </div>
                   <div className="text-right">
                     <div className="text-3xl font-bold text-green-600 mb-2">
-                      ${property.price.toLocaleString()}
+                      Ksh {property.price.toLocaleString()}
                     </div>
                     {property.featured && (
                       <Badge className="bg-green-600 text-white">Featured</Badge>
@@ -219,7 +219,7 @@ const SingleListing = () => {
                     <span className="text-gray-600">Parking Spaces:</span>
                     <span className="font-medium">{property.parking}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between hidden">
                     <span className="text-gray-600">Price per sq ft:</span>
                     <span className="font-medium">${Math.round(property.price / property.sqft)}</span>
                   </div>

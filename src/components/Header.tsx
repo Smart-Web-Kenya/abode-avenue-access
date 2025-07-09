@@ -31,6 +31,12 @@ const Header = () => {
           </nav>
           
           <div className="flex items-center space-x-4">
+            <Link to="/admin">
+              <Button variant="ghost" className="text-gray-700">
+                Go to Admin
+              </Button>
+            </Link>
+
             <Link to="/signin">
               {/* <Button variant="ghost" className="text-gray-700"> */}
               <Button className="bg-green-700 hover:bg-green-900 text-white">

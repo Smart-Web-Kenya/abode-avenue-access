@@ -222,7 +222,7 @@ const Archive = () => {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-xl font-bold text-green-600">
-                      {property.price.toLocaleString()}
+                      Ksh {property.price.toLocaleString()}
                     </span>
                     <Link to={`/listing/${property.id}`}>
                       <Button size="sm" className="bg-green-600 hover:bg-green-700">

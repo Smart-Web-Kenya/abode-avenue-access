@@ -70,9 +70,9 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
               <Button variant="ghost" size="icon">
                 <User className="h-5 w-5" />
               </Button>
-            <Button variant="ghost" size="icon" onClick={() => console.log('Logging out...')}>
+            <Link to="/" className="inline-flex items-center justify-center p-2 rounded-md text-black bg-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
               <LogOut className="h-5 w-5" />
-            </Button>
+            </Link>
             </div>
           </div>
         </div>

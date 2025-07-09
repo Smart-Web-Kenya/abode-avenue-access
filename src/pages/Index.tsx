@@ -124,7 +124,7 @@ const Index = () => {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-2xl font-bold text-green-600">
-                      ${property.price.toLocaleString()}
+                      Ksh {property.price.toLocaleString()}
                     </span>
                     <Link to={`/listing/${property.id}`}>
                       <Button variant="outline" size="sm">
