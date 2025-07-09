@@ -154,7 +154,7 @@ const AdminProperties = () => {
                     </TableCell>
                     <TableCell>{property.location}</TableCell>
                     <TableCell className="font-medium">
-                      ${property.price.toLocaleString()}
+                      Ksh {property.price.toLocaleString()}
                     </TableCell>
                     <TableCell>
                       <Badge className={getStatusBadge(property.status)}>

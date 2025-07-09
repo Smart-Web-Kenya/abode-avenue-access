@@ -31,7 +31,7 @@ const App = () => (
           <Route path="/archive" element={<Archive />} />
           <Route path="/listing/:id" element={<SingleListing />} />
           <Route path="/signin" element={<SignIn />} />
-          <Route path="/signup" element={<SignUp />} />
+          {/* <Route path="/signup" element={<SignUp />} /> */}
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/properties" element={<AdminProperties />} />
           <Route path="/admin/users" element={<AdminUsers />} />

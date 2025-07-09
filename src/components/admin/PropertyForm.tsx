@@ -113,7 +113,7 @@ const PropertyForm = ({ onClose, property }: PropertyFormProps) => {
               />
             </div>
             <div>
-              <Label htmlFor="price">Price ($)</Label>
+              <Label htmlFor="price">Price (Ksh)</Label>
               <Input
                 id="price"
                 type="number"

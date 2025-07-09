@@ -17,7 +17,7 @@ const AdminDashboard = () => {
       value: '1,234',
       change: '+8%',
       icon: Users,
-      color: 'text-blue-600',
+      color: 'text-green-600',
     },
     {
       title: 'Properties Sold',
@@ -79,7 +79,7 @@ const AdminDashboard = () => {
                       <p className="text-sm text-gray-500">Added 2 hours ago</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-medium">$450,000</p>
+                      <p className="font-medium">450,000</p>
                     </div>
                   </div>
                 ))}

@@ -114,10 +114,10 @@ const Archive = () => {
                   <SelectValue placeholder="Price Range" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="0-300000">$0 - $300k</SelectItem>
-                  <SelectItem value="300000-600000">$300k - $600k</SelectItem>
-                  <SelectItem value="600000-1000000">$600k - $1M</SelectItem>
-                  <SelectItem value="1000000+">$1M+</SelectItem>
+                  <SelectItem value="0-300000">0 - 300k</SelectItem>
+                  <SelectItem value="300000-600000">300k - 600k</SelectItem>
+                  <SelectItem value="600000-1000000">600k - 1M</SelectItem>
+                  <SelectItem value="1000000+">1M+</SelectItem>
                 </SelectContent>
               </Select>
               
@@ -186,7 +186,7 @@ const Archive = () => {
                   />
                   <div className="absolute top-4 left-4 flex gap-2">
                     {property.featured && (
-                      <Badge className="bg-blue-600 text-white">Featured</Badge>
+                      <Badge className="bg-green-600 text-white">Featured</Badge>
                     )}
                     <Badge variant="secondary">{property.type}</Badge>
                   </div>
@@ -198,7 +198,7 @@ const Archive = () => {
                 </div>
                 <CardContent className="p-4">
                   <Link to={`/listing/${property.id}`}>
-                    <h3 className="text-lg font-semibold mb-2 text-gray-900 hover:text-blue-600 transition-colors">
+                    <h3 className="text-lg font-semibold mb-2 text-gray-900 hover:text-green-600 transition-colors">
                       {property.title}
                     </h3>
                   </Link>
@@ -221,11 +221,11 @@ const Archive = () => {
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-xl font-bold text-blue-600">
-                      ${property.price.toLocaleString()}
+                    <span className="text-xl font-bold text-green-600">
+                      {property.price.toLocaleString()}
                     </span>
                     <Link to={`/listing/${property.id}`}>
-                      <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                      <Button size="sm" className="bg-green-600 hover:bg-green-700">
                         View Details
                       </Button>
                     </Link>
@@ -239,7 +239,7 @@ const Archive = () => {
           <div className="flex justify-center mt-12">
             <div className="flex items-center space-x-2">
               <Button variant="outline" disabled>Previous</Button>
-              <Button className="bg-blue-600 text-white">1</Button>
+              <Button className="bg-green-600 text-white">1</Button>
               <Button variant="outline">2</Button>
               <Button variant="outline">3</Button>
               <Button variant="outline">Next</Button>

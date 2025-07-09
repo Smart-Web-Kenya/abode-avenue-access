@@ -114,7 +114,7 @@ const AdminLocations = () => {
   const getLevelBadge = (level: string) => {
     const colors = {
       'Country': 'bg-purple-100 text-purple-800',
-      'City': 'bg-blue-100 text-blue-800',
+      'City': 'bg-green-100 text-green-800',
       'Area': 'bg-brand-green/10 text-brand-green',
       'Sub Area': 'bg-brand-orange/10 text-brand-orange'
     };
@@ -219,7 +219,7 @@ const AdminLocations = () => {
           </Card>
           <Card>
             <CardContent className="p-6">
-              <div className="text-2xl font-bold text-blue-600">3</div>
+              <div className="text-2xl font-bold text-green-600">3</div>
               <p className="text-sm text-gray-600">Cities</p>
             </CardContent>
           </Card>

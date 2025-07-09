@@ -30,11 +30,13 @@ const SignIn = () => {
         {/* Header */}
         <div className="text-center">
           <Link to="/" className="flex items-center justify-center space-x-2 mb-8">
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-xl">E</span>
-            </div>
-            <span className="text-2xl font-bold text-gray-900">EstateHub</span>
+            <img 
+              src="/lovable-uploads/dd3bf938-7550-47d8-9be1-5e186c5e635d.png" 
+              alt="Merit Africa Homes" 
+              className="h-20 w-auto"
+            />
           </Link>
+
           <h2 className="text-3xl font-bold text-gray-900">Welcome back</h2>
           <p className="mt-2 text-sm text-gray-600">
             Sign in to your account to continue
@@ -99,7 +101,7 @@ const SignIn = () => {
                     id="remember-me"
                     name="remember-me"
                     type="checkbox"
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
                   />
                   <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
                     Remember me
@@ -107,7 +109,7 @@ const SignIn = () => {
                 </div>
 
                 <div className="text-sm">
-                  <Link to="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
+                  <Link to="/forgot-password" className="font-medium text-green-600 hover:text-green-500">
                     Forgot your password?
                   </Link>
                 </div>
@@ -115,7 +117,7 @@ const SignIn = () => {
 
               <Button
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700"
+                className="w-full bg-green-600 hover:bg-green-700"
                 disabled={isLoading}
               >
                 {isLoading ? 'Signing in...' : 'Sign in'}
@@ -144,9 +146,9 @@ const SignIn = () => {
               </div>
             </div>
 
-            <p className="mt-6 text-center text-sm text-gray-600">
+            <p className="mt-6 text-center text-sm text-gray-600 hidden">
               Don't have an account?{' '}
-              <Link to="/signup" className="font-medium text-blue-600 hover:text-blue-500">
+              <Link to="/signup" className="font-medium text-green-600 hover:text-green-500">
                 Sign up here
               </Link>
             </p>

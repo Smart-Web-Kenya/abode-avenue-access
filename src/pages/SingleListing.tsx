@@ -41,7 +41,7 @@ const SingleListing = () => {
     ],
     agent: {
       name: "Sarah Johnson",
-      email: "sarah@estatehub.com",
+      email: "sarah@meritafricahomes.com",
       phone: "+1 (555) 123-4567",
       image: "https://images.unsplash.com/photo-1472396961693-142e6e269027?w=200&h=200&fit=crop&crop=face"
     }
@@ -55,9 +55,9 @@ const SingleListing = () => {
         {/* Breadcrumb */}
         <nav className="mb-6">
           <div className="flex items-center text-sm text-gray-600">
-            <Link to="/" className="hover:text-blue-600">Home</Link>
+            <Link to="/" className="hover:text-green-600">Home</Link>
             <span className="mx-2">/</span>
-            <Link to="/archive" className="hover:text-blue-600">Properties</Link>
+            <Link to="/archive" className="hover:text-green-600">Properties</Link>
             <span className="mx-2">/</span>
             <span className="text-gray-900">{property.title}</span>
           </div>
@@ -81,7 +81,7 @@ const SingleListing = () => {
                         key={index}
                         onClick={() => setCurrentImageIndex(index)}
                         className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 ${
-                          currentImageIndex === index ? 'border-blue-600' : 'border-white'
+                          currentImageIndex === index ? 'border-green-600' : 'border-white'
                         }`}
                       >
                         <img
@@ -108,11 +108,11 @@ const SingleListing = () => {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-3xl font-bold text-blue-600 mb-2">
+                    <div className="text-3xl font-bold text-green-600 mb-2">
                       ${property.price.toLocaleString()}
                     </div>
                     {property.featured && (
-                      <Badge className="bg-blue-600 text-white">Featured</Badge>
+                      <Badge className="bg-green-600 text-white">Featured</Badge>
                     )}
                   </div>
                 </div>
@@ -120,22 +120,22 @@ const SingleListing = () => {
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
                   <div className="text-center">
-                    <Bed className="h-8 w-8 mx-auto mb-2 text-blue-600" />
+                    <Bed className="h-8 w-8 mx-auto mb-2 text-green-600" />
                     <div className="text-2xl font-semibold">{property.bedrooms}</div>
                     <div className="text-sm text-gray-600">Bedrooms</div>
                   </div>
                   <div className="text-center">
-                    <Bath className="h-8 w-8 mx-auto mb-2 text-blue-600" />
+                    <Bath className="h-8 w-8 mx-auto mb-2 text-green-600" />
                     <div className="text-2xl font-semibold">{property.bathrooms}</div>
                     <div className="text-sm text-gray-600">Bathrooms</div>
                   </div>
                   <div className="text-center">
-                    <Square className="h-8 w-8 mx-auto mb-2 text-blue-600" />
+                    <Square className="h-8 w-8 mx-auto mb-2 text-green-600" />
                     <div className="text-2xl font-semibold">{property.sqft}</div>
                     <div className="text-sm text-gray-600">Sq Ft</div>
                   </div>
                   <div className="text-center">
-                    <Calendar className="h-8 w-8 mx-auto mb-2 text-blue-600" />
+                    <Calendar className="h-8 w-8 mx-auto mb-2 text-green-600" />
                     <div className="text-2xl font-semibold">{property.yearBuilt}</div>
                     <div className="text-sm text-gray-600">Year Built</div>
                   </div>
@@ -159,7 +159,7 @@ const SingleListing = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {property.amenities.map((amenity, index) => (
                     <div key={index} className="flex items-center space-x-3">
-                      <amenity.icon className="h-5 w-5 text-blue-600" />
+                      <amenity.icon className="h-5 w-5 text-green-600" />
                       <span>{amenity.name}</span>
                     </div>
                   ))}
@@ -187,7 +187,7 @@ const SingleListing = () => {
                 </div>
                 
                 <div className="space-y-4">
-                  <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                  <Button className="w-full bg-green-600 hover:bg-green-700">
                     Schedule Viewing
                   </Button>
                   <Button variant="outline" className="w-full">

@@ -48,7 +48,7 @@ const Index = () => {
       <Header />
       
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-blue-600 to-blue-800 text-white py-24">
+      <section className="relative bg-gradient-to-r from-green-700 to-green-900 text-white py-24">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-5xl font-bold mb-6 animate-fade-in">
             Find Your Dream Home
@@ -64,13 +64,13 @@ const Index = () => {
                 <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                 <Input
                   placeholder="Enter location, property type, or keyword..."
-                  className="pl-10 border-0 text-gray-900 focus:ring-2 focus:ring-blue-500"
+                  className="pl-10 border-0 text-gray-900 focus:ring-2 focus:ring-green-500"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
               <Link to="/archive">
-                <Button className="bg-blue-600 hover:bg-blue-700 px-8">
+                <Button className="bg-green-600 hover:bg-green-700 px-8">
                   Search
                 </Button>
               </Link>
@@ -98,7 +98,7 @@ const Index = () => {
                     alt={property.title}
                     className="w-full h-64 object-cover hover:scale-105 transition-transform duration-300"
                   />
-                  <div className="absolute top-4 left-4 bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                  <div className="absolute top-4 left-4 bg-green-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
                     Featured
                   </div>
                 </div>
@@ -123,7 +123,7 @@ const Index = () => {
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold text-blue-600">
+                    <span className="text-2xl font-bold text-green-600">
                       ${property.price.toLocaleString()}
                     </span>
                     <Link to={`/listing/${property.id}`}>
@@ -139,7 +139,7 @@ const Index = () => {
           
           <div className="text-center mt-12">
             <Link to="/archive">
-              <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
+              <Button size="lg" className="bg-green-600 hover:bg-green-700">
                 View All Properties
               </Button>
             </Link>
@@ -155,13 +155,13 @@ const Index = () => {
             Join thousands of satisfied customers who found their perfect property with us
           </p>
           <div className="flex gap-4 justify-center flex-wrap">
-            <Link to="/signup">
-              <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
+            {/* <Link to="/signup">
+              <Button size="lg" className="bg-green-600 hover:bg-green-700">
                 Get Started
               </Button>
-            </Link>
+            </Link> */}
             <Link to="/archive">
-              <Button size="lg" variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800">
+              <Button size="lg" variant="outline" className="border-orange-600 text-black hover:bg-orange-800 hover:text-white">
                 Browse Properties
               </Button>
             </Link>

@@ -112,7 +112,7 @@ const AdminCategories = () => {
 
   const getTypeBadge = (type: string) => {
     const colors = {
-      'Property Type': 'bg-blue-100 text-blue-800',
+      'Property Type': 'bg-green-100 text-green-800',
       'Bedroom Count': 'bg-brand-green/10 text-brand-green',
       'Price Range': 'bg-purple-100 text-purple-800',
       'Location Type': 'bg-brand-orange/10 text-brand-orange'
@@ -218,7 +218,7 @@ const AdminCategories = () => {
           </Card>
           <Card>
             <CardContent className="p-6">
-              <div className="text-2xl font-bold text-blue-600">
+              <div className="text-2xl font-bold text-green-600">
                 {categories.filter(c => c.type === 'Property Type').length}
               </div>
               <p className="text-sm text-gray-600">Property Types</p>

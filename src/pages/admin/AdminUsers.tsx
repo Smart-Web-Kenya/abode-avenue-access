@@ -61,7 +61,7 @@ const AdminUsers = () => {
   const getRoleBadge = (role: string) => {
     const colors = {
       'Admin': 'bg-purple-100 text-purple-800',
-      'Agent': 'bg-blue-100 text-blue-800',
+      'Agent': 'bg-green-100 text-green-800',
       'Client': 'bg-brand-green/10 text-brand-green'
     };
     return colors[role as keyof typeof colors] || 'bg-gray-100 text-gray-800';
@@ -194,7 +194,7 @@ const AdminUsers = () => {
           </Card>
           <Card>
             <CardContent className="p-6">
-              <div className="text-2xl font-bold text-blue-600">45</div>
+              <div className="text-2xl font-bold text-green-600">45</div>
               <p className="text-sm text-gray-600">Active Agents</p>
             </CardContent>
           </Card>

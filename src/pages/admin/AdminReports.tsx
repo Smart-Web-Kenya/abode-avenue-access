@@ -104,10 +104,10 @@ const AdminReports = () => {
                 <div>
                   <p className="text-sm text-gray-600">Total Revenue</p>
                   <p className="text-2xl font-bold text-green-600">
-                    ${reportData.totalRevenue.toLocaleString()}
+                    {reportData.totalRevenue.toLocaleString()}
                   </p>
                 </div>
-                <DollarSign className="h-8 w-8 text-green-600" />
+                <span className="h-8 w-8 text-green-600">Ksh</span>
               </div>
               <div className="flex items-center mt-2">
                 <TrendingUp className="h-4 w-4 text-green-600 mr-1" />
@@ -121,9 +121,9 @@ const AdminReports = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">Properties Sold</p>
-                  <p className="text-2xl font-bold text-blue-600">{reportData.propertiesSold}</p>
+                  <p className="text-2xl font-bold text-green-600">{reportData.propertiesSold}</p>
                 </div>
-                <TrendingUp className="h-8 w-8 text-blue-600" />
+                <TrendingUp className="h-8 w-8 text-green-600" />
               </div>
               <div className="flex items-center mt-2">
                 <TrendingUp className="h-4 w-4 text-green-600 mr-1" />
@@ -196,7 +196,7 @@ const AdminReports = () => {
                   <TableHead>Agent</TableHead>
                   <TableHead>Buyer</TableHead>
                   <TableHead>Date</TableHead>
-                  <TableHead>Commission</TableHead>
+                  <TableHead className="hidden">Commission</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -204,11 +204,11 @@ const AdminReports = () => {
                   <TableRow key={sale.id}>
                     <TableCell className="font-medium">{sale.property}</TableCell>
                     <TableCell>{sale.location}</TableCell>
-                    <TableCell className="font-bold text-green-600">${sale.price.toLocaleString()}</TableCell>
+                    <TableCell className="font-bold text-green-600">Ksh {sale.price.toLocaleString()}</TableCell>
                     <TableCell>{sale.agent}</TableCell>
                     <TableCell>{sale.buyer}</TableCell>
                     <TableCell>{sale.date}</TableCell>
-                    <TableCell className="font-medium">${sale.commission.toLocaleString()}</TableCell>
+                    <TableCell className="font-medium hidden">Ksh {sale.commission.toLocaleString()}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -216,7 +216,7 @@ const AdminReports = () => {
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 hidden">
           {/* Top Performers */}
           <Card>
             <CardHeader>
@@ -242,7 +242,7 @@ const AdminReports = () => {
                       </TableCell>
                       <TableCell className="font-medium">{performer.name}</TableCell>
                       <TableCell>{performer.sales}</TableCell>
-                      <TableCell className="font-bold">${performer.revenue.toLocaleString()}</TableCell>
+                      <TableCell className="font-bold">Ksh {performer.revenue.toLocaleString()}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

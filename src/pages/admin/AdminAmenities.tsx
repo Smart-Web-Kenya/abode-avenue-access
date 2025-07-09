@@ -145,7 +145,7 @@ const AdminAmenities = () => {
           </Card>
           <Card>
             <CardContent className="p-6">
-              <div className="text-2xl font-bold text-blue-600">
+              <div className="text-2xl font-bold text-green-600">
                 {amenities.reduce((sum, a) => sum + a.usageCount, 0)}
               </div>
               <p className="text-sm text-gray-600">Total Usage</p>

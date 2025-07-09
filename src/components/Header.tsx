@@ -6,12 +6,12 @@ const Header = () => {
   return (
     <header className="bg-white shadow-sm border-b">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-24">
           <Link to="/" className="flex items-center space-x-2">
             <img 
               src="/lovable-uploads/dd3bf938-7550-47d8-9be1-5e186c5e635d.png" 
               alt="Merit Africa Homes" 
-              className="h-10 w-auto"
+              className="h-20 w-auto"
             />
           </Link>
           
@@ -32,11 +32,12 @@ const Header = () => {
           
           <div className="flex items-center space-x-4">
             <Link to="/signin">
-              <Button variant="ghost" className="text-gray-700">
+              {/* <Button variant="ghost" className="text-gray-700"> */}
+              <Button className="bg-green-700 hover:bg-green-900 text-white">
                 Sign In
               </Button>
             </Link>
-            <Link to="/signup">
+            <Link to="/signup" className="hidden">
               <Button className="bg-teal-600 hover:bg-teal-700 text-white">
                 Sign Up
               </Button>

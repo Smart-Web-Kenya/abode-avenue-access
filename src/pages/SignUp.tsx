@@ -55,10 +55,11 @@ const SignUp = () => {
         {/* Header */}
         <div className="text-center">
           <Link to="/" className="flex items-center justify-center space-x-2 mb-8">
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-xl">E</span>
-            </div>
-            <span className="text-2xl font-bold text-gray-900">EstateHub</span>
+            <img 
+              src="/lovable-uploads/dd3bf938-7550-47d8-9be1-5e186c5e635d.png" 
+              alt="Merit Africa Homes" 
+              className="h-20 w-auto"
+            />
           </Link>
           <h2 className="text-3xl font-bold text-gray-900">Create your account</h2>
           <p className="mt-2 text-sm text-gray-600">
@@ -187,11 +188,11 @@ const SignUp = () => {
                   className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
                   I agree to the{' '}
-                  <Link to="/terms" className="text-blue-600 hover:text-blue-500">
+                  <Link to="/terms" className="text-green-600 hover:text-green-500">
                     Terms and Conditions
                   </Link>{' '}
                   and{' '}
-                  <Link to="/privacy" className="text-blue-600 hover:text-blue-500">
+                  <Link to="/privacy" className="text-green-600 hover:text-green-500">
                     Privacy Policy
                   </Link>
                 </label>
@@ -199,7 +200,7 @@ const SignUp = () => {
 
               <Button
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700"
+                className="w-full bg-green-600 hover:bg-green-700"
                 disabled={isLoading}
               >
                 {isLoading ? 'Creating account...' : 'Create account'}
@@ -230,7 +231,7 @@ const SignUp = () => {
 
             <p className="mt-6 text-center text-sm text-gray-600">
               Already have an account?{' '}
-              <Link to="/signin" className="font-medium text-blue-600 hover:text-blue-500">
+              <Link to="/signin" className="font-medium text-green-600 hover:text-green-500">
                 Sign in here
               </Link>
             </p>

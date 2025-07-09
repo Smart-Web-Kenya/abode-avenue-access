@@ -12,7 +12,8 @@ import {
   Settings,
   MapPin,
   Tag,
-  Building
+  Building,
+  LogOut
 } from 'lucide-react';
 
 interface AdminLayoutProps {
@@ -30,6 +31,9 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     { name: 'Amenities', href: '/admin/amenities', icon: Settings },
     { name: 'Locations', href: '/admin/locations', icon: MapPin },
     { name: 'Categories', href: '/admin/categories', icon: Tag },
+    { name: 'Home', href: '/', icon: Home },
+    { name: 'Logout', href: '/', icon: LogOut },
+
   ];
 
   return (
@@ -54,7 +58,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
 
             {/* Right side */}
             <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="icon">
+              {/* <Button variant="ghost" size="icon">
                 <Search className="h-5 w-5" />
               </Button>
               <Button variant="ghost" size="icon" className="relative">
@@ -62,10 +66,13 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                 <span className="absolute -top-1 -right-1 h-4 w-4 bg-brand-orange rounded-full text-xs text-white flex items-center justify-center">
                   3
                 </span>
-              </Button>
+              </Button> */}
               <Button variant="ghost" size="icon">
                 <User className="h-5 w-5" />
               </Button>
+            <Button variant="ghost" size="icon" onClick={() => console.log('Logging out...')}>
+              <LogOut className="h-5 w-5" />
+            </Button>
             </div>
           </div>
         </div>
