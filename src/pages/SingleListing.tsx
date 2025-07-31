@@ -10,9 +10,11 @@ import { Label } from '@/components/ui/label';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { MapPin, Bath, Bed, Square, Calendar, Car, Wifi, Dumbbell, Shield, Trees, Play, Send } from 'lucide-react';
 import Header from '@/components/Header';
+import { useProperty } from '@/hooks/useProperties';
 
 const SingleListing = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
+  const { property, loading, error } = useProperty(id || '');
   const [bookingForm, setBookingForm] = useState({
     name: '',
     email: '',
@@ -22,50 +24,61 @@ const SingleListing = () => {
 
   const handleBookingSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle booking submission
     console.log('Booking submitted:', bookingForm);
-    // Reset form
     setBookingForm({ name: '', email: '', phone: '', preferredDate: '' });
   };
 
-  // Mock property data - in a real app, this would come from an API
-  const property = {
-    id: 1,
-    title: "Modern Downtown Loft",
-    price: 450000,
-    location: "Downtown District, 123 Main Street",
-    bedrooms: 2,
-    bathrooms: 2,
-    sqft: 1200,
-    type: "Apartment",
-    yearBuilt: 2020,
-    parking: 1,
-    featured: true,
-    description: "Experience urban luxury in this stunning downtown loft featuring floor-to-ceiling windows, hardwood floors, and modern finishes throughout. The open-concept design creates a seamless flow between the living, dining, and kitchen areas, perfect for entertaining. The gourmet kitchen boasts stainless steel appliances, quartz countertops, and custom cabinetry.",
-    videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ", // Sample video URL
-    images: [
-      "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=1200&h=800&fit=crop",
-      "https://images.unsplash.com/photo-1483058712412-4245e9b90334?w=1200&h=800&fit=crop",
-      "https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=1200&h=800&fit=crop",
-      "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&h=800&fit=crop"
-    ],
-    amenities: [
-      { name: "WiFi Included", icon: Wifi },
-      { name: "Fitness Center", icon: Dumbbell },
-      { name: "Secure Building", icon: Shield },
-      { name: "Rooftop Garden", icon: Trees },
-      { name: "Parking Space", icon: Car }
-    ],
-    agent: {
-      name: "Sarah Johnson",
-      email: "sarah@estatehub.com",
-      phone: "+1 (555) 123-4567",
-      image: "https://images.unsplash.com/photo-1472396961693-142e6e269027?w=200&h=200&fit=crop&crop=face"
-    },
-    coordinates: {
-      lat: 40.7128,
-      lng: -74.0060
-    }
+  // Icon mapping for amenities
+  const amenityIcons: { [key: string]: any } = {
+    'WiFi Included': Wifi,
+    'Fitness Center': Dumbbell,
+    'Secure Building': Shield,
+    'Rooftop Garden': Trees,
+    'Parking Space': Car,
+    'Gym': Dumbbell,
+    'Security': Shield,
+    'Swimming Pool': Trees // Using Trees as a fallback, you can add more icons as needed
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-green"></div>
+            <p className="ml-4 text-gray-600">Loading property details...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !property) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center py-16">
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">Property Not Found</h1>
+            <p className="text-gray-600 mb-8">The property you're looking for doesn't exist or has been removed.</p>
+            <Link to="/archive">
+              <Button className="bg-brand-green hover:bg-brand-green/90 text-white">
+                Browse All Properties
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Mock agent data (you can extend the database later to include agent information)
+  const agent = {
+    name: "Sarah Johnson",
+    email: "sarah@estatehub.com",
+    phone: "+1 (555) 123-4567",
+    image: "https://images.unsplash.com/photo-1472396961693-142e6e269027?w=200&h=200&fit=crop&crop=face"
   };
 
   return (
@@ -88,28 +101,30 @@ const SingleListing = () => {
           {/* Main Content */}
           <div className="lg:col-span-2">
             {/* Property Video */}
-            <div className="mb-8">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Play className="h-5 w-5 text-brand-orange" />
-                    Property Video Tour
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="aspect-video">
-                    <iframe
-                      src={property.videoUrl}
-                      title="Property Video Tour"
-                      className="w-full h-full rounded-lg"
-                      frameBorder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    ></iframe>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            {property.video_url && (
+              <div className="mb-8">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Play className="h-5 w-5 text-brand-orange" />
+                      Property Video Tour
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="aspect-video">
+                      <iframe
+                        src={property.video_url}
+                        title="Property Video Tour"
+                        className="w-full h-full rounded-lg"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      ></iframe>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
 
             {/* Image Gallery Carousel */}
             <div className="mb-8">
@@ -120,17 +135,29 @@ const SingleListing = () => {
                 <CardContent>
                   <Carousel className="w-full">
                     <CarouselContent>
-                      {property.images.map((image, index) => (
-                        <CarouselItem key={index}>
+                      {property.images && Array.isArray(property.images) && property.images.length > 0 ? (
+                        property.images.map((image, index) => (
+                          <CarouselItem key={index}>
+                            <div className="p-1">
+                              <img
+                                src={image}
+                                alt={`${property.title} - Image ${index + 1}`}
+                                className="w-full h-96 object-cover rounded-lg"
+                              />
+                            </div>
+                          </CarouselItem>
+                        ))
+                      ) : (
+                        <CarouselItem>
                           <div className="p-1">
                             <img
-                              src={image}
-                              alt={`${property.title} - Image ${index + 1}`}
+                              src={property.image_url || "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=1200&h=800&fit=crop"}
+                              alt={property.title}
                               className="w-full h-96 object-cover rounded-lg"
                             />
                           </div>
                         </CarouselItem>
-                      ))}
+                      )}
                     </CarouselContent>
                     <CarouselPrevious />
                     <CarouselNext />
@@ -152,7 +179,7 @@ const SingleListing = () => {
                   </div>
                   <div className="text-right">
                     <div className="text-3xl font-bold text-brand-green mb-2">
-                      ${property.price.toLocaleString()}
+                      ${Number(property.price).toLocaleString()}
                     </div>
                     {property.featured && (
                       <Badge className="bg-brand-green text-white">Featured</Badge>
@@ -179,7 +206,7 @@ const SingleListing = () => {
                   </div>
                   <div className="text-center">
                     <Calendar className="h-8 w-8 mx-auto mb-2 text-brand-green" />
-                    <div className="text-2xl font-semibold">{property.yearBuilt}</div>
+                    <div className="text-2xl font-semibold">{property.year_built || 'N/A'}</div>
                     <div className="text-sm text-gray-600">Year Built</div>
                   </div>
                 </div>
@@ -188,52 +215,60 @@ const SingleListing = () => {
                 
                 <div>
                   <h3 className="text-lg font-semibold mb-4">Description</h3>
-                  <p className="text-gray-700 leading-relaxed">{property.description}</p>
+                  <p className="text-gray-700 leading-relaxed">
+                    {property.description || 'No description available for this property.'}
+                  </p>
                 </div>
               </CardContent>
             </Card>
 
             {/* Amenities */}
-            <Card className="mb-8">
-              <CardHeader>
-                <CardTitle>Amenities & Features</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {property.amenities.map((amenity, index) => (
-                    <div key={index} className="flex items-center space-x-3">
-                      <amenity.icon className="h-5 w-5 text-brand-green" />
-                      <span>{amenity.name}</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            {property.amenities && Array.isArray(property.amenities) && property.amenities.length > 0 && (
+              <Card className="mb-8">
+                <CardHeader>
+                  <CardTitle>Amenities & Features</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {property.amenities.map((amenity, index) => {
+                      const IconComponent = amenityIcons[amenity] || Shield;
+                      return (
+                        <div key={index} className="flex items-center space-x-3">
+                          <IconComponent className="h-5 w-5 text-brand-green" />
+                          <span>{amenity}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Google Maps */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Location</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="aspect-video">
-                  <iframe
-                    src={`https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3024.5273!2d${property.coordinates.lng}!3d${property.coordinates.lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNDBCeDEyJzEwLjEiTiA3NMKwMDAnMjEuNiJX!5e0!3m2!1sen!2sus!4v1234567890123`}
-                    className="w-full h-full rounded-lg"
-                    style={{ border: 0 }}
-                    allowFullScreen
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    title="Property Location"
-                  ></iframe>
-                </div>
-              </CardContent>
-            </Card>
+            {property.coordinates && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Location</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="aspect-video">
+                    <iframe
+                      src={`https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3024.5273!2d${property.coordinates.lng}!3d${property.coordinates.lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNDBCeDEyJzEwLjEiTiA3NMKwMDAnMjEuNiJX!5e0!3m2!1sen!2sus!4v1234567890123`}
+                      className="w-full h-full rounded-lg"
+                      style={{ border: 0 }}
+                      allowFullScreen
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                      title="Property Location"
+                    ></iframe>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            {/* Booking Form */}
             <Card className="mb-6 sticky top-4">
               <CardHeader>
                 <CardTitle>Book a Viewing</CardTitle>
@@ -288,7 +323,6 @@ const SingleListing = () => {
               </CardContent>
             </Card>
 
-            {/* Contact Agent Card */}
             <Card className="mb-6">
               <CardHeader>
                 <CardTitle>Contact Agent</CardTitle>
@@ -296,11 +330,11 @@ const SingleListing = () => {
               <CardContent>
                 <div className="text-center mb-6">
                   <img
-                    src={property.agent.image}
-                    alt={property.agent.name}
+                    src={agent.image}
+                    alt={agent.name}
                     className="w-20 h-20 rounded-full mx-auto mb-4"
                   />
-                  <h3 className="font-semibold text-lg">{property.agent.name}</h3>
+                  <h3 className="font-semibold text-lg">{agent.name}</h3>
                   <p className="text-gray-600 text-sm">Licensed Real Estate Agent</p>
                 </div>
                 
@@ -309,7 +343,7 @@ const SingleListing = () => {
                     Schedule Viewing
                   </Button>
                   <Button variant="outline" className="w-full">
-                    Call: {property.agent.phone}
+                    Call: {agent.phone}
                   </Button>
                   <Button variant="outline" className="w-full">
                     Email Agent
@@ -318,7 +352,6 @@ const SingleListing = () => {
               </CardContent>
             </Card>
 
-            {/* Property Summary */}
             <Card>
               <CardHeader>
                 <CardTitle>Property Summary</CardTitle>
@@ -327,19 +360,19 @@ const SingleListing = () => {
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Property Type:</span>
-                    <span className="font-medium">{property.type}</span>
+                    <span className="font-medium">{property.property_type}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Year Built:</span>
-                    <span className="font-medium">{property.yearBuilt}</span>
+                    <span className="font-medium">{property.year_built || 'N/A'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Parking Spaces:</span>
-                    <span className="font-medium">{property.parking}</span>
+                    <span className="font-medium">{property.parking_spaces || 0}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Price per sq ft:</span>
-                    <span className="font-medium">${Math.round(property.price / property.sqft)}</span>
+                    <span className="font-medium">${Math.round(Number(property.price) / property.sqft)}</span>
                   </div>
                 </div>
               </CardContent>

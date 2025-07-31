@@ -14,7 +14,159 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      amenities: {
+        Row: {
+          created_at: string
+          icon: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      locations: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      properties: {
+        Row: {
+          amenities: Json | null
+          bathrooms: number
+          bedrooms: number
+          category_id: string | null
+          coordinates: Json | null
+          created_at: string
+          description: string | null
+          featured: boolean | null
+          id: string
+          image_url: string | null
+          images: Json | null
+          location: string
+          location_id: string | null
+          parking_spaces: number | null
+          price: number
+          property_type: string
+          sqft: number
+          status: string | null
+          title: string
+          updated_at: string
+          video_url: string | null
+          year_built: number | null
+        }
+        Insert: {
+          amenities?: Json | null
+          bathrooms: number
+          bedrooms: number
+          category_id?: string | null
+          coordinates?: Json | null
+          created_at?: string
+          description?: string | null
+          featured?: boolean | null
+          id?: string
+          image_url?: string | null
+          images?: Json | null
+          location: string
+          location_id?: string | null
+          parking_spaces?: number | null
+          price: number
+          property_type: string
+          sqft: number
+          status?: string | null
+          title: string
+          updated_at?: string
+          video_url?: string | null
+          year_built?: number | null
+        }
+        Update: {
+          amenities?: Json | null
+          bathrooms?: number
+          bedrooms?: number
+          category_id?: string | null
+          coordinates?: Json | null
+          created_at?: string
+          description?: string | null
+          featured?: boolean | null
+          id?: string
+          image_url?: string | null
+          images?: Json | null
+          location?: string
+          location_id?: string | null
+          parking_spaces?: number | null
+          price?: number
+          property_type?: string
+          sqft?: number
+          status?: string | null
+          title?: string
+          updated_at?: string
+          video_url?: string | null
+          year_built?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "properties_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "properties_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
