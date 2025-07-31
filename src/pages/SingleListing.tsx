@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
-import { MapPin, Bath, Bed, Square, Calendar, Car, Wifi, Dumbbell, Shield, Trees, Play, Send } from 'lucide-react';
+import { MapPin, Bath, Bed, Square, Calendar, Car, Wifi, Dumbbell, Shield, Trees, Play, Send, MessageCircle } from 'lucide-react';
 import Header from '@/components/Header';
 import { useProperty } from '@/hooks/useProperties';
 
@@ -330,11 +329,11 @@ const SingleListing = () => {
               <CardContent>
                 <div className="text-center mb-6">
                   <img
-                    src={agent.image}
-                    alt={agent.name}
+                    src={property.agent_image || "https://images.unsplash.com/photo-1472396961693-142e6e269027?w=200&h=200&fit=crop&crop=face"}
+                    alt={property.agent_name || "Agent"}
                     className="w-20 h-20 rounded-full mx-auto mb-4"
                   />
-                  <h3 className="font-semibold text-lg">{agent.name}</h3>
+                  <h3 className="font-semibold text-lg">{property.agent_name || "Real Estate Agent"}</h3>
                   <p className="text-gray-600 text-sm">Licensed Real Estate Agent</p>
                 </div>
                 
@@ -342,22 +341,44 @@ const SingleListing = () => {
                   <Button className="w-full bg-brand-green hover:bg-brand-green/90 text-white">
                     Schedule Viewing
                   </Button>
-                  <Button variant="outline" className="w-full">
-                    Call: {agent.phone}
-                  </Button>
-                  <Button variant="outline" className="w-full">
-                    Email Agent
-                  </Button>
+                  {property.agent_phone && (
+                    <Button variant="outline" className="w-full">
+                      Call: {property.agent_phone}
+                    </Button>
+                  )}
+                  {property.agent_email && (
+                    <Button variant="outline" className="w-full">
+                      Email Agent
+                    </Button>
+                  )}
+                  {property.contact_whatsapp && (
+                    <Button variant="outline" className="w-full bg-green-50 hover:bg-green-100">
+                      <MessageCircle className="h-4 w-4 mr-2" />
+                      WhatsApp: {property.contact_whatsapp}
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>Property Summary</CardTitle>
+                <CardTitle>Property Contact</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Contact:</span>
+                    <span className="font-medium">{property.contact_name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Email:</span>
+                    <span className="font-medium">{property.contact_email}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Phone:</span>
+                    <span className="font-medium">{property.contact_phone}</span>
+                  </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Property Type:</span>
                     <span className="font-medium">{property.property_type}</span>

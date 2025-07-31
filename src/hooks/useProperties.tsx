@@ -25,6 +25,14 @@ export interface Property {
   updated_at: string;
   category_id?: string;
   location_id?: string;
+  contact_name?: string;
+  contact_email?: string;
+  contact_phone?: string;
+  contact_whatsapp?: string;
+  agent_name?: string;
+  agent_email?: string;
+  agent_phone?: string;
+  agent_image?: string;
 }
 
 // Helper function to transform database row to Property interface
@@ -52,6 +60,14 @@ const transformProperty = (row: any): Property => {
     updated_at: row.updated_at,
     category_id: row.category_id,
     location_id: row.location_id,
+    contact_name: row.contact_name,
+    contact_email: row.contact_email,
+    contact_phone: row.contact_phone,
+    contact_whatsapp: row.contact_whatsapp,
+    agent_name: row.agent_name,
+    agent_email: row.agent_email,
+    agent_phone: row.agent_phone,
+    agent_image: row.agent_image,
   };
 };
 

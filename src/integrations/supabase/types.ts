@@ -79,10 +79,18 @@ export type Database = {
       }
       properties: {
         Row: {
+          agent_email: string | null
+          agent_image: string | null
+          agent_name: string | null
+          agent_phone: string | null
           amenities: Json | null
           bathrooms: number
           bedrooms: number
           category_id: string | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          contact_whatsapp: string | null
           coordinates: Json | null
           created_at: string
           description: string | null
@@ -103,10 +111,18 @@ export type Database = {
           year_built: number | null
         }
         Insert: {
+          agent_email?: string | null
+          agent_image?: string | null
+          agent_name?: string | null
+          agent_phone?: string | null
           amenities?: Json | null
           bathrooms: number
           bedrooms: number
           category_id?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          contact_whatsapp?: string | null
           coordinates?: Json | null
           created_at?: string
           description?: string | null
@@ -127,10 +143,18 @@ export type Database = {
           year_built?: number | null
         }
         Update: {
+          agent_email?: string | null
+          agent_image?: string | null
+          agent_name?: string | null
+          agent_phone?: string | null
           amenities?: Json | null
           bathrooms?: number
           bedrooms?: number
           category_id?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          contact_whatsapp?: string | null
           coordinates?: Json | null
           created_at?: string
           description?: string | null
