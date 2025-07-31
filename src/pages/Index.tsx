@@ -12,18 +12,49 @@ import PartnersAwards from '@/components/PartnersAwards';
 import FAQ from '@/components/FAQ';
 import AboutUs from '@/components/AboutUs';
 import Footer from '@/components/Footer';
-import { useProperties } from '@/hooks/useProperties';
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentSlide, setCurrentSlide] = useState(0);
-  const { properties: featuredProperties, loading, error } = useProperties(true);
 
   const heroImages = [
     "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=1200&h=800&fit=crop",
     "https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=1200&h=800&fit=crop",
     "https://images.unsplash.com/photo-1483058712412-4245e9b90334?w=1200&h=800&fit=crop",
     "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&h=800&fit=crop"
+  ];
+
+  const featuredProperties = [
+    {
+      id: 1,
+      title: "Modern Downtown Loft",
+      price: 450000,
+      location: "Downtown District",
+      bedrooms: 2,
+      bathrooms: 2,
+      sqft: 1200,
+      image: "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=800&h=600&fit=crop"
+    },
+    {
+      id: 2,
+      title: "Luxury Family Home",
+      price: 750000,
+      location: "Suburban Hills",
+      bedrooms: 4,
+      bathrooms: 3,
+      sqft: 2400,
+      image: "https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=800&h=600&fit=crop"
+    },
+    {
+      id: 3,
+      title: "Cozy Studio Apartment",
+      price: 225000,
+      location: "Arts Quarter",
+      bedrooms: 1,
+      bathrooms: 1,
+      sqft: 650,
+      image: "https://images.unsplash.com/photo-1483058712412-4245e9b90334?w=800&h=600&fit=crop"
+    }
   ];
 
   const nextSlide = () => {
@@ -146,31 +177,12 @@ const Index = () => {
             </p>
           </div>
           
-          {loading && (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-green mx-auto"></div>
-              <p className="mt-4 text-gray-600">Loading featured properties...</p>
-            </div>
-          )}
-
-          {error && (
-            <div className="text-center py-8">
-              <p className="text-red-600">Error loading properties: {error}</p>
-            </div>
-          )}
-
-          {!loading && !error && featuredProperties.length === 0 && (
-            <div className="text-center py-8">
-              <p className="text-gray-600">No featured properties available at the moment.</p>
-            </div>
-          )}
-          
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {featuredProperties.map((property) => (
               <Card key={property.id} className="overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer">
                 <div className="relative">
                   <img
-                    src={property.image_url || "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=800&h=600&fit=crop"}
+                    src={property.image}
                     alt={property.title}
                     className="w-full h-64 object-cover hover:scale-105 transition-transform duration-300"
                   />
@@ -200,7 +212,7 @@ const Index = () => {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-2xl font-bold text-brand-green">
-                      ${Number(property.price).toLocaleString()}
+                      ${property.price.toLocaleString()}
                     </span>
                     <Link to={`/listing/${property.id}`}>
                       <Button variant="outline" size="sm">
