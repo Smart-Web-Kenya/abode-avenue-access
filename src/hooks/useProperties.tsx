@@ -27,6 +27,34 @@ export interface Property {
   location_id?: string;
 }
 
+// Helper function to transform database row to Property interface
+const transformProperty = (row: any): Property => {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    price: Number(row.price),
+    location: row.location,
+    bedrooms: row.bedrooms,
+    bathrooms: row.bathrooms,
+    sqft: row.sqft,
+    property_type: row.property_type,
+    year_built: row.year_built,
+    parking_spaces: row.parking_spaces,
+    featured: row.featured,
+    status: row.status,
+    image_url: row.image_url,
+    images: Array.isArray(row.images) ? row.images : [],
+    video_url: row.video_url,
+    coordinates: row.coordinates && typeof row.coordinates === 'object' ? row.coordinates as { lat: number; lng: number } : undefined,
+    amenities: Array.isArray(row.amenities) ? row.amenities : [],
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    category_id: row.category_id,
+    location_id: row.location_id,
+  };
+};
+
 export const useProperties = (featured?: boolean) => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,7 +79,8 @@ export const useProperties = (featured?: boolean) => {
           console.error('Error fetching properties:', error);
           setError(error.message);
         } else {
-          setProperties(data || []);
+          const transformedProperties = (data || []).map(transformProperty);
+          setProperties(transformedProperties);
         }
       } catch (err) {
         console.error('Unexpected error:', err);
@@ -86,7 +115,8 @@ export const useProperty = (id: string) => {
           console.error('Error fetching property:', error);
           setError(error.message);
         } else {
-          setProperty(data);
+          const transformedProperty = data ? transformProperty(data) : null;
+          setProperty(transformedProperty);
         }
       } catch (err) {
         console.error('Unexpected error:', err);
