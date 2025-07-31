@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -6,6 +5,13 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Search, MapPin, Bath, Bed, Square, ChevronLeft, ChevronRight } from 'lucide-react';
 import Header from '@/components/Header';
+import WhyChooseUs from '@/components/WhyChooseUs';
+import Testimonials from '@/components/Testimonials';
+import TrackRecord from '@/components/TrackRecord';
+import PartnersAwards from '@/components/PartnersAwards';
+import FAQ from '@/components/FAQ';
+import AboutUs from '@/components/AboutUs';
+import Footer from '@/components/Footer';
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -229,6 +235,24 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Why Choose Us Section */}
+      <WhyChooseUs />
+
+      {/* Testimonials Section */}
+      <Testimonials />
+
+      {/* Track Record Section */}
+      <TrackRecord />
+
+      {/* Partners & Awards Section */}
+      <PartnersAwards />
+
+      {/* About Us Section */}
+      <AboutUs />
+
+      {/* FAQs Section */}
+      <FAQ />
+
       {/* CTA Section */}
       <section className="bg-gray-900 text-white py-16">
         <div className="container mx-auto px-4 text-center">
@@ -250,6 +274,9 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };
