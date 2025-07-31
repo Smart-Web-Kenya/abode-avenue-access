@@ -5,12 +5,28 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { MapPin, Bath, Bed, Square, Calendar, Car, Wifi, Dumbbell, Shield, Trees } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import { MapPin, Bath, Bed, Square, Calendar, Car, Wifi, Dumbbell, Shield, Trees, Play, Send } from 'lucide-react';
 import Header from '@/components/Header';
 
 const SingleListing = () => {
   const { id } = useParams();
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [bookingForm, setBookingForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    preferredDate: ''
+  });
+
+  const handleBookingSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Handle booking submission
+    console.log('Booking submitted:', bookingForm);
+    // Reset form
+    setBookingForm({ name: '', email: '', phone: '', preferredDate: '' });
+  };
 
   // Mock property data - in a real app, this would come from an API
   const property = {
@@ -26,6 +42,7 @@ const SingleListing = () => {
     parking: 1,
     featured: true,
     description: "Experience urban luxury in this stunning downtown loft featuring floor-to-ceiling windows, hardwood floors, and modern finishes throughout. The open-concept design creates a seamless flow between the living, dining, and kitchen areas, perfect for entertaining. The gourmet kitchen boasts stainless steel appliances, quartz countertops, and custom cabinetry.",
+    videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ", // Sample video URL
     images: [
       "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=1200&h=800&fit=crop",
       "https://images.unsplash.com/photo-1483058712412-4245e9b90334?w=1200&h=800&fit=crop",
@@ -44,6 +61,10 @@ const SingleListing = () => {
       email: "sarah@estatehub.com",
       phone: "+1 (555) 123-4567",
       image: "https://images.unsplash.com/photo-1472396961693-142e6e269027?w=200&h=200&fit=crop&crop=face"
+    },
+    coordinates: {
+      lat: 40.7128,
+      lng: -74.0060
     }
   };
 
@@ -55,9 +76,9 @@ const SingleListing = () => {
         {/* Breadcrumb */}
         <nav className="mb-6">
           <div className="flex items-center text-sm text-gray-600">
-            <Link to="/" className="hover:text-blue-600">Home</Link>
+            <Link to="/" className="hover:text-brand-green">Home</Link>
             <span className="mx-2">/</span>
-            <Link to="/archive" className="hover:text-blue-600">Properties</Link>
+            <Link to="/archive" className="hover:text-brand-green">Properties</Link>
             <span className="mx-2">/</span>
             <span className="text-gray-900">{property.title}</span>
           </div>
@@ -66,34 +87,56 @@ const SingleListing = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2">
-            {/* Image Gallery */}
+            {/* Property Video */}
             <div className="mb-8">
-              <div className="relative">
-                <img
-                  src={property.images[currentImageIndex]}
-                  alt={property.title}
-                  className="w-full h-96 object-cover rounded-lg"
-                />
-                <div className="absolute bottom-4 left-4 right-4">
-                  <div className="flex gap-2 overflow-x-auto">
-                    {property.images.map((image, index) => (
-                      <button
-                        key={index}
-                        onClick={() => setCurrentImageIndex(index)}
-                        className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 ${
-                          currentImageIndex === index ? 'border-blue-600' : 'border-white'
-                        }`}
-                      >
-                        <img
-                          src={image}
-                          alt={`View ${index + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                      </button>
-                    ))}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Play className="h-5 w-5 text-brand-orange" />
+                    Property Video Tour
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="aspect-video">
+                    <iframe
+                      src={property.videoUrl}
+                      title="Property Video Tour"
+                      className="w-full h-full rounded-lg"
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    ></iframe>
                   </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Image Gallery Carousel */}
+            <div className="mb-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Property Gallery</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Carousel className="w-full">
+                    <CarouselContent>
+                      {property.images.map((image, index) => (
+                        <CarouselItem key={index}>
+                          <div className="p-1">
+                            <img
+                              src={image}
+                              alt={`${property.title} - Image ${index + 1}`}
+                              className="w-full h-96 object-cover rounded-lg"
+                            />
+                          </div>
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                    <CarouselPrevious />
+                    <CarouselNext />
+                  </Carousel>
+                </CardContent>
+              </Card>
             </div>
 
             {/* Property Details */}
@@ -108,11 +151,11 @@ const SingleListing = () => {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-3xl font-bold text-blue-600 mb-2">
+                    <div className="text-3xl font-bold text-brand-green mb-2">
                       ${property.price.toLocaleString()}
                     </div>
                     {property.featured && (
-                      <Badge className="bg-blue-600 text-white">Featured</Badge>
+                      <Badge className="bg-brand-green text-white">Featured</Badge>
                     )}
                   </div>
                 </div>
@@ -120,22 +163,22 @@ const SingleListing = () => {
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
                   <div className="text-center">
-                    <Bed className="h-8 w-8 mx-auto mb-2 text-blue-600" />
+                    <Bed className="h-8 w-8 mx-auto mb-2 text-brand-green" />
                     <div className="text-2xl font-semibold">{property.bedrooms}</div>
                     <div className="text-sm text-gray-600">Bedrooms</div>
                   </div>
                   <div className="text-center">
-                    <Bath className="h-8 w-8 mx-auto mb-2 text-blue-600" />
+                    <Bath className="h-8 w-8 mx-auto mb-2 text-brand-green" />
                     <div className="text-2xl font-semibold">{property.bathrooms}</div>
                     <div className="text-sm text-gray-600">Bathrooms</div>
                   </div>
                   <div className="text-center">
-                    <Square className="h-8 w-8 mx-auto mb-2 text-blue-600" />
+                    <Square className="h-8 w-8 mx-auto mb-2 text-brand-green" />
                     <div className="text-2xl font-semibold">{property.sqft}</div>
                     <div className="text-sm text-gray-600">Sq Ft</div>
                   </div>
                   <div className="text-center">
-                    <Calendar className="h-8 w-8 mx-auto mb-2 text-blue-600" />
+                    <Calendar className="h-8 w-8 mx-auto mb-2 text-brand-green" />
                     <div className="text-2xl font-semibold">{property.yearBuilt}</div>
                     <div className="text-sm text-gray-600">Year Built</div>
                   </div>
@@ -151,7 +194,7 @@ const SingleListing = () => {
             </Card>
 
             {/* Amenities */}
-            <Card>
+            <Card className="mb-8">
               <CardHeader>
                 <CardTitle>Amenities & Features</CardTitle>
               </CardHeader>
@@ -159,10 +202,30 @@ const SingleListing = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {property.amenities.map((amenity, index) => (
                     <div key={index} className="flex items-center space-x-3">
-                      <amenity.icon className="h-5 w-5 text-blue-600" />
+                      <amenity.icon className="h-5 w-5 text-brand-green" />
                       <span>{amenity.name}</span>
                     </div>
                   ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Google Maps */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Location</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="aspect-video">
+                  <iframe
+                    src={`https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3024.5273!2d${property.coordinates.lng}!3d${property.coordinates.lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNDBCeDEyJzEwLjEiTiA3NMKwMDAnMjEuNiJX!5e0!3m2!1sen!2sus!4v1234567890123`}
+                    className="w-full h-full rounded-lg"
+                    style={{ border: 0 }}
+                    allowFullScreen
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    title="Property Location"
+                  ></iframe>
                 </div>
               </CardContent>
             </Card>
@@ -170,8 +233,63 @@ const SingleListing = () => {
 
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            {/* Contact Agent Card */}
+            {/* Booking Form */}
             <Card className="mb-6 sticky top-4">
+              <CardHeader>
+                <CardTitle>Book a Viewing</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleBookingSubmit} className="space-y-4">
+                  <div>
+                    <Label htmlFor="name">Full Name</Label>
+                    <Input
+                      id="name"
+                      type="text"
+                      value={bookingForm.name}
+                      onChange={(e) => setBookingForm({ ...bookingForm, name: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={bookingForm.email}
+                      onChange={(e) => setBookingForm({ ...bookingForm, email: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={bookingForm.phone}
+                      onChange={(e) => setBookingForm({ ...bookingForm, phone: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="date">Preferred Date</Label>
+                    <Input
+                      id="date"
+                      type="date"
+                      value={bookingForm.preferredDate}
+                      onChange={(e) => setBookingForm({ ...bookingForm, preferredDate: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <Button type="submit" className="w-full bg-brand-orange hover:bg-brand-orange/90 text-white">
+                    <Send className="h-4 w-4 mr-2" />
+                    Book Viewing
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            {/* Contact Agent Card */}
+            <Card className="mb-6">
               <CardHeader>
                 <CardTitle>Contact Agent</CardTitle>
               </CardHeader>
@@ -187,7 +305,7 @@ const SingleListing = () => {
                 </div>
                 
                 <div className="space-y-4">
-                  <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                  <Button className="w-full bg-brand-green hover:bg-brand-green/90 text-white">
                     Schedule Viewing
                   </Button>
                   <Button variant="outline" className="w-full">

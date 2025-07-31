@@ -4,11 +4,19 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Search, MapPin, Bath, Bed, Square } from 'lucide-react';
+import { Search, MapPin, Bath, Bed, Square, ChevronLeft, ChevronRight } from 'lucide-react';
 import Header from '@/components/Header';
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  const heroImages = [
+    "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=1200&h=800&fit=crop",
+    "https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=1200&h=800&fit=crop",
+    "https://images.unsplash.com/photo-1483058712412-4245e9b90334?w=1200&h=800&fit=crop",
+    "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&h=800&fit=crop"
+  ];
 
   const featuredProperties = [
     {
@@ -43,35 +51,109 @@ const Index = () => {
     }
   ];
 
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % heroImages.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + heroImages.length) % heroImages.length);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
       
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-blue-600 to-blue-800 text-white py-24">
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-5xl font-bold mb-6 animate-fade-in">
-            Find Your Dream Home
-          </h1>
-          <p className="text-xl mb-8 max-w-2xl mx-auto opacity-90">
-            Discover the perfect property from our curated collection of premium homes and apartments
-          </p>
-          
-          {/* Search Bar */}
-          <div className="max-w-2xl mx-auto bg-white rounded-lg p-4 shadow-lg">
-            <div className="flex gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                <Input
-                  placeholder="Enter location, property type, or keyword..."
-                  className="pl-10 border-0 text-gray-900 focus:ring-2 focus:ring-blue-500"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+      {/* Enhanced Hero Section with Image Slider */}
+      <section className="relative h-screen overflow-hidden">
+        {/* Background Image Slider */}
+        <div className="absolute inset-0">
+          {heroImages.map((image, index) => (
+            <div
+              key={index}
+              className={`absolute inset-0 transition-opacity duration-1000 ${
+                index === currentSlide ? 'opacity-100' : 'opacity-0'
+              }`}
+            >
+              <img
+                src={image}
+                alt={`Hero slide ${index + 1}`}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-black/40" />
+            </div>
+          ))}
+        </div>
+
+        {/* Slider Controls */}
+        <button
+          onClick={prevSlide}
+          className="absolute left-4 top-1/2 -translate-y-1/2 z-30 bg-white/20 hover:bg-white/30 rounded-full p-2 transition-colors"
+        >
+          <ChevronLeft className="h-6 w-6 text-white" />
+        </button>
+        <button
+          onClick={nextSlide}
+          className="absolute right-4 top-1/2 -translate-y-1/2 z-30 bg-white/20 hover:bg-white/30 rounded-full p-2 transition-colors"
+        >
+          <ChevronRight className="h-6 w-6 text-white" />
+        </button>
+
+        {/* Slide Indicators */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex gap-2">
+          {heroImages.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentSlide(index)}
+              className={`w-3 h-3 rounded-full transition-colors ${
+                index === currentSlide ? 'bg-white' : 'bg-white/50'
+              }`}
+            />
+          ))}
+        </div>
+
+        {/* Content Overlay */}
+        <div className="relative z-20 container mx-auto px-4 h-full flex items-center justify-center text-center">
+          <div className="max-w-4xl">
+            {/* Animated Headline */}
+            <h1 className="text-6xl md:text-7xl font-bold text-white mb-6 animate-fade-in">
+              Explore Our{' '}
+              <span className="text-brand-orange animate-pulse">Awesome</span>{' '}
+              Properties
+            </h1>
+            <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-3xl mx-auto animate-fade-in">
+              Discover the perfect property from our curated collection of premium homes and apartments
+            </p>
+            
+            {/* Search Bar */}
+            <div className="max-w-2xl mx-auto bg-white rounded-lg p-4 shadow-lg mb-8 animate-scale-in">
+              <div className="flex gap-4">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  <Input
+                    placeholder="Enter location, property type, or keyword..."
+                    className="pl-10 border-0 text-gray-900 focus:ring-2 focus:ring-brand-green"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                <Link to="/archive">
+                  <Button className="bg-brand-green hover:bg-brand-green/90 text-white px-8">
+                    Search
+                  </Button>
+                </Link>
               </div>
+            </div>
+
+            {/* Call-to-Action Buttons */}
+            <div className="flex gap-4 justify-center flex-wrap animate-fade-in">
               <Link to="/archive">
-                <Button className="bg-blue-600 hover:bg-blue-700 px-8">
-                  Search
+                <Button size="lg" className="bg-brand-orange hover:bg-brand-orange/90 text-white px-8 py-4 text-lg">
+                  View Listings
+                </Button>
+              </Link>
+              <Link to="/archive">
+                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-gray-900 px-8 py-4 text-lg">
+                  Book a Viewing
                 </Button>
               </Link>
             </div>
@@ -98,7 +180,7 @@ const Index = () => {
                     alt={property.title}
                     className="w-full h-64 object-cover hover:scale-105 transition-transform duration-300"
                   />
-                  <div className="absolute top-4 left-4 bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                  <div className="absolute top-4 left-4 bg-brand-green text-white px-3 py-1 rounded-full text-sm font-semibold">
                     Featured
                   </div>
                 </div>
@@ -123,7 +205,7 @@ const Index = () => {
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold text-blue-600">
+                    <span className="text-2xl font-bold text-brand-green">
                       ${property.price.toLocaleString()}
                     </span>
                     <Link to={`/listing/${property.id}`}>
@@ -139,7 +221,7 @@ const Index = () => {
           
           <div className="text-center mt-12">
             <Link to="/archive">
-              <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
+              <Button size="lg" className="bg-brand-green hover:bg-brand-green/90 text-white">
                 View All Properties
               </Button>
             </Link>
@@ -156,7 +238,7 @@ const Index = () => {
           </p>
           <div className="flex gap-4 justify-center flex-wrap">
             <Link to="/signup">
-              <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
+              <Button size="lg" className="bg-brand-green hover:bg-brand-green/90 text-white">
                 Get Started
               </Button>
             </Link>
