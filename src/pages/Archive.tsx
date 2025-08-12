@@ -9,6 +9,19 @@ import { Search, MapPin, Bath, Bed, Square, Filter } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
+import img1 from '@/assets/images/img1.jpg';
+import img2 from '@/assets/images/img2.jpg';
+import img3 from '@/assets/images/img3.webp';
+import img4 from '@/assets/images/img4.webp';
+import img5 from '@/assets/images/img5.png';
+import img6 from '@/assets/images/img6.webp';
+import img7 from '@/assets/images/img7.jpg';
+import img8 from '@/assets/images/img8.jpg';
+import img9 from '@/assets/images/img9.webp';
+import img10 from '@/assets/images/img10.jpg';
+import img11 from '@/assets/images/img11.jpg';
+
+
 const Archive = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [priceRange, setPriceRange] = useState('');
@@ -18,75 +31,75 @@ const Archive = () => {
   const properties = [
     {
       id: 1,
-      title: "Modern Downtown Loft",
+      title: "Savannah Heights",
       price: 450000,
-      location: "Downtown District",
+      location: "Kiambu Road",
       bedrooms: 2,
       bathrooms: 2,
       sqft: 1200,
       type: "Apartment",
       featured: true,
-      image: "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=800&h=600&fit=crop"
+      image: img11
     },
     {
       id: 2,
       title: "Luxury Family Home",
       price: 750000,
-      location: "Suburban Hills",
+      location: "Nairobi,Buruburu",
       bedrooms: 4,
       bathrooms: 3,
       sqft: 2400,
       type: "House",
       featured: true,
-      image: "https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=800&h=600&fit=crop"
+      image: img10
     },
     {
       id: 3,
-      title: "Cozy Studio Apartment",
+      title: "Milimani Gardens",
       price: 225000,
-      location: "Arts Quarter",
+      location: "Nakuru, Milimani",
       bedrooms: 1,
       bathrooms: 1,
       sqft: 650,
       type: "Studio",
       featured: false,
-      image: "https://images.unsplash.com/photo-1483058712412-4245e9b90334?w=800&h=600&fit=crop"
+      image: img6
     },
     {
       id: 4,
       title: "Spacious Townhouse",
       price: 525000,
-      location: "Riverside",
+      location: "Nairobi, Kileleshwa",
       bedrooms: 3,
       bathrooms: 2,
       sqft: 1800,
       type: "Townhouse",
       featured: false,
-      image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=600&fit=crop"
+      image: img7
     },
     {
       id: 5,
-      title: "Executive Penthouse",
+      title: "Bahari House",
       price: 1200000,
-      location: "City Center",
+      location: "Nairobi, Lavington",
       bedrooms: 3,
       bathrooms: 3,
       sqft: 2200,
       type: "Penthouse",
       featured: true,
-      image: "https://images.unsplash.com/photo-1472396961693-142e6e269027?w=800&h=600&fit=crop"
+      image: img3
     },
     {
       id: 6,
-      title: "Garden View Condo",
+      title: "Nyota Villa",
       price: 375000,
-      location: "Green Valley",
+      location: "Nairobi, Westlands",
       bedrooms: 2,
       bathrooms: 2,
       sqft: 1100,
       type: "Condo",
       featured: false,
-      image: "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=800&h=600&fit=crop"
+      image: img2
     }
   ];
 
@@ -187,7 +200,7 @@ const Archive = () => {
                     />
                     <div className="absolute top-4 left-4 flex gap-2">
                       {property.featured && (
-                        <Badge className="bg-blue-600 text-white">Featured</Badge>
+                        <Badge className="bg-brand-green text-white">Featured</Badge>
                       )}
                       <Badge variant="secondary">{property.type}</Badge>
                     </div>
@@ -207,7 +220,7 @@ const Archive = () => {
                     </div>
                   </div>
                   <CardContent className="p-4">
-                    <h3 className="text-lg font-semibold mb-2 text-gray-900 group-hover:text-blue-600 transition-colors">
+                    <h3 className="text-lg font-semibold mb-2 text-gray-900 group-hover:text-brand-green transition-colors">
                       {property.title}
                     </h3>
                     <div className="flex items-center text-gray-600 mb-3">
@@ -229,12 +242,12 @@ const Archive = () => {
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-xl font-bold text-blue-600">
-                        ${property.price.toLocaleString()}
+                      <span className="text-xl font-bold text-brand-green">
+                        Ksh.{property.price.toLocaleString()}
                       </span>
                       <Button 
                         size="sm" 
-                        className="bg-blue-600 hover:bg-blue-700"
+                        className="bg-brand-green hover:bg-orange-700"
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
@@ -253,7 +266,7 @@ const Archive = () => {
           <div className="flex justify-center mt-12">
             <div className="flex items-center space-x-2">
               <Button variant="outline" disabled>Previous</Button>
-              <Button className="bg-blue-600 text-white">1</Button>
+              <Button className="bg-brand-green text-white">1</Button>
               <Button variant="outline">2</Button>
               <Button variant="outline">3</Button>
               <Button variant="outline">Next</Button>

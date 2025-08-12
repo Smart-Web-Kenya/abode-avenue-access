@@ -4,6 +4,11 @@ import AboutUs from '@/components/AboutUs';
 import WhyChooseUs from '@/components/WhyChooseUs';
 import TrackRecord from '@/components/TrackRecord';
 import Footer from '@/components/Footer';
+import person1 from '@/assets/images/person1.jpg';
+import person2 from '@/assets/images/person2.jpeg';
+import person3 from '@/assets/images/person3.jpg';
+import person4 from '@/assets/images/person4.jpeg';
+
 
 const About = () => {
   return (
@@ -42,19 +47,19 @@ const About = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               {
-                name: "Sarah Johnson",
+                name: "Benson Ochieng",
                 role: "Senior Real Estate Agent",
-                image: "https://images.unsplash.com/photo-1494790108755-2616b612b647?w=400&h=400&fit=crop"
+                image:person4
               },
               {
                 name: "Michael Chen",
                 role: "Property Investment Specialist",
-                image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop"
+                image: person2
               },
               {
                 name: "Emma Williams",
                 role: "Market Research Analyst",
-                image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop"
+                image: person3
               }
             ].map((member, index) => (
               <div key={index} className="text-center">

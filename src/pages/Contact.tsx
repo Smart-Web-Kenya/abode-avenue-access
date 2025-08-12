@@ -149,7 +149,7 @@ const Contact = () => {
                       <h3 className="font-semibold text-gray-900 mb-2">Our Office</h3>
                       <p className="text-gray-600">
                         123 Real Estate Boulevard<br />
-                        Lagos, Nigeria<br />
+                        Nairobi, Kenya<br />
                         100001
                       </p>
                     </div>
@@ -162,8 +162,7 @@ const Contact = () => {
                     <div>
                       <h3 className="font-semibold text-gray-900 mb-2">Phone</h3>
                       <p className="text-gray-600">
-                        +234 (0) 123 456 7890<br />
-                        +234 (0) 987 654 3210
+                        +254705357755<br />
                       </p>
                     </div>
                   </CardContent>
