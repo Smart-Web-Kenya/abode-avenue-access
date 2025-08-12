@@ -1,12 +1,8 @@
 
-import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Star } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 const Testimonials = () => {
-  const [currentTestimonial, setCurrentTestimonial] = useState(0);
-
   const testimonials = [
     {
       name: "Sarah Johnson",
@@ -31,14 +27,6 @@ const Testimonials = () => {
     }
   ];
 
-  const nextTestimonial = () => {
-    setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
-  };
-
-  const prevTestimonial = () => {
-    setCurrentTestimonial((prev) => (prev - 1 + testimonials.length) % testimonials.length);
-  };
-
   return (
     <section className="py-16 bg-gray-50">
       <div className="container mx-auto px-4">
@@ -49,59 +37,32 @@ const Testimonials = () => {
           </p>
         </div>
 
-        <div className="max-w-4xl mx-auto relative">
-          <Card className="bg-white shadow-lg">
-            <CardContent className="p-8">
-              <div className="text-center">
-                <img
-                  src={testimonials[currentTestimonial].image}
-                  alt={testimonials[currentTestimonial].name}
-                  className="w-16 h-16 rounded-full mx-auto mb-4"
-                />
-                <div className="flex justify-center mb-4">
-                  {[...Array(testimonials[currentTestimonial].rating)].map((_, i) => (
-                    <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
-                  ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+          {testimonials.map((testimonial, index) => (
+            <Card key={index} className="bg-white shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <CardContent className="p-8">
+                <div className="text-center">
+                  <img
+                    src={testimonial.image}
+                    alt={testimonial.name}
+                    className="w-16 h-16 rounded-full mx-auto mb-4"
+                  />
+                  <div className="flex justify-center mb-4">
+                    {[...Array(testimonial.rating)].map((_, i) => (
+                      <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
+                    ))}
+                  </div>
+                  <blockquote className="text-lg text-gray-700 mb-6 italic">
+                    "{testimonial.content}"
+                  </blockquote>
+                  <div>
+                    <h4 className="font-semibold text-gray-900">{testimonial.name}</h4>
+                    <p className="text-gray-600">{testimonial.role}</p>
+                  </div>
                 </div>
-                <blockquote className="text-lg text-gray-700 mb-6 italic">
-                  "{testimonials[currentTestimonial].content}"
-                </blockquote>
-                <div>
-                  <h4 className="font-semibold text-gray-900">{testimonials[currentTestimonial].name}</h4>
-                  <p className="text-gray-600">{testimonials[currentTestimonial].role}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Button
-            variant="outline"
-            size="icon"
-            className="absolute left-4 top-1/2 -translate-y-1/2 bg-white shadow-lg"
-            onClick={prevTestimonial}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            className="absolute right-4 top-1/2 -translate-y-1/2 bg-white shadow-lg"
-            onClick={nextTestimonial}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-
-          <div className="flex justify-center mt-6 gap-2">
-            {testimonials.map((_, index) => (
-              <button
-                key={index}
-                className={`w-3 h-3 rounded-full transition-colors ${
-                  index === currentTestimonial ? 'bg-brand-green' : 'bg-gray-300'
-                }`}
-                onClick={() => setCurrentTestimonial(index)}
-              />
-            ))}
-          </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     </section>

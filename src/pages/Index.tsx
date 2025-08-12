@@ -1,4 +1,5 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,6 +24,15 @@ const Index = () => {
     "https://images.unsplash.com/photo-1483058712412-4245e9b90334?w=1200&h=800&fit=crop",
     "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&h=800&fit=crop"
   ];
+
+  // Auto-slide functionality
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroImages.length);
+    }, 5000); // Change slide every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [heroImages.length]);
 
   const featuredProperties = [
     {
@@ -80,12 +90,14 @@ const Index = () => {
                 index === currentSlide ? 'opacity-100' : 'opacity-0'
               }`}
             >
-              <img
-                src={image}
-                alt={`Hero slide ${index + 1}`}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-black/40" />
+              <Link to="/archive" className="block w-full h-full">
+                <img
+                  src={image}
+                  alt={`Hero slide ${index + 1}`}
+                  className="w-full h-full object-cover cursor-pointer"
+                />
+              </Link>
+              <div className="absolute inset-0 bg-black/40 pointer-events-none" />
             </div>
           ))}
         </div>
@@ -179,49 +191,49 @@ const Index = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {featuredProperties.map((property) => (
-              <Card key={property.id} className="overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer">
-                <div className="relative">
-                  <img
-                    src={property.image}
-                    alt={property.title}
-                    className="w-full h-64 object-cover hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute top-4 left-4 bg-brand-green text-white px-3 py-1 rounded-full text-sm font-semibold">
-                    Featured
-                  </div>
-                </div>
-                <CardContent className="p-6">
-                  <h3 className="text-xl font-semibold mb-2 text-gray-900">{property.title}</h3>
-                  <div className="flex items-center text-gray-600 mb-3">
-                    <MapPin className="h-4 w-4 mr-1" />
-                    <span className="text-sm">{property.location}</span>
-                  </div>
-                  <div className="flex items-center justify-between mb-4 text-sm text-gray-600">
-                    <div className="flex items-center">
-                      <Bed className="h-4 w-4 mr-1" />
-                      <span>{property.bedrooms} bed</span>
-                    </div>
-                    <div className="flex items-center">
-                      <Bath className="h-4 w-4 mr-1" />
-                      <span>{property.bathrooms} bath</span>
-                    </div>
-                    <div className="flex items-center">
-                      <Square className="h-4 w-4 mr-1" />
-                      <span>{property.sqft} sqft</span>
+              <Link key={property.id} to={`/listing/${property.id}`} className="block">
+                <Card className="overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer">
+                  <div className="relative">
+                    <img
+                      src={property.image}
+                      alt={property.title}
+                      className="w-full h-64 object-cover hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute top-4 left-4 bg-brand-green text-white px-3 py-1 rounded-full text-sm font-semibold">
+                      Featured
                     </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold text-brand-green">
-                      ${property.price.toLocaleString()}
-                    </span>
-                    <Link to={`/listing/${property.id}`}>
-                      <Button variant="outline" size="sm">
+                  <CardContent className="p-6">
+                    <h3 className="text-xl font-semibold mb-2 text-gray-900">{property.title}</h3>
+                    <div className="flex items-center text-gray-600 mb-3">
+                      <MapPin className="h-4 w-4 mr-1" />
+                      <span className="text-sm">{property.location}</span>
+                    </div>
+                    <div className="flex items-center justify-between mb-4 text-sm text-gray-600">
+                      <div className="flex items-center">
+                        <Bed className="h-4 w-4 mr-1" />
+                        <span>{property.bedrooms} bed</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Bath className="h-4 w-4 mr-1" />
+                        <span>{property.bathrooms} bath</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Square className="h-4 w-4 mr-1" />
+                        <span>{property.sqft} sqft</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-2xl font-bold text-brand-green">
+                        ${property.price.toLocaleString()}
+                      </span>
+                      <Button variant="outline" size="sm" onClick={(e) => e.stopPropagation()}>
                         View Details
                       </Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
           
