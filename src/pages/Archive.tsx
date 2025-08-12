@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Search, MapPin, Bath, Bed, Square, Filter } from 'lucide-react';
 import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
 const Archive = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -261,6 +261,8 @@ const Archive = () => {
           </div>
         </div>
       </section>
+
+      <Footer />
     </div>
   );
 };

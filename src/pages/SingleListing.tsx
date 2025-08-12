@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { MapPin, Bath, Bed, Square, Calendar, Car, Wifi, Dumbbell, Shield, Trees, Play, Send } from 'lucide-react';
 import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
 const SingleListing = () => {
   const { id } = useParams();
@@ -347,6 +348,8 @@ const SingleListing = () => {
           </div>
         </div>
       </div>
+      
+      <Footer />
     </div>
   );
 };
