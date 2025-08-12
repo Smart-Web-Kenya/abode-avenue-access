@@ -89,12 +89,14 @@ const Index = () => {
                 index === currentSlide ? 'opacity-100' : 'opacity-0'
               }`}
             >
-              <img
-                src={image}
-                alt={`Hero slide ${index + 1}`}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-black/40" />
+              <Link to="/archive" className="block w-full h-full">
+                <img
+                  src={image}
+                  alt={`Hero slide ${index + 1}`}
+                  className="w-full h-full object-cover cursor-pointer"
+                />
+              </Link>
+              <div className="absolute inset-0 bg-black/40 pointer-events-none" />
             </div>
           ))}
         </div>
