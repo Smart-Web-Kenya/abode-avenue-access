@@ -8,6 +8,12 @@ import { Badge } from '@/components/ui/badge';
 import { Search, Calendar, User, ArrowRight } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import nigeria from '@/assets/images/nigeria.jpg';
+import h1 from '@/assets/images/h1.webp';
+import h2 from '@/assets/images/aff.jpg';
+import hmerket from '@/assets/images/hmarket.webp';
+import h3 from '@/assets/images/h3.jpeg';
+import nbo from '@/assets/images/nbo.webp';
 
 const Blog = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -15,62 +21,62 @@ const Blog = () => {
   const blogPosts = [
     {
       id: 1,
-      title: "10 Tips for First-Time Home Buyers in Africa",
+      title: "The Future of Smart Homes: Tech Innovations in Real Estate",
       excerpt: "Buying your first home can be overwhelming. Here are essential tips to help you navigate the African real estate market successfully.",
       author: "Sarah Johnson",
       date: "2024-01-15",
       category: "Buying Guide",
-      image: "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&h=400&fit=crop",
+      image: h2,
       readTime: "5 min read"
     },
     {
       id: 2,
-      title: "The Rise of Smart Homes in Nigerian Cities",
+      title: "Rent vs. Buy: Which Option Makes More Sense in Today’s Market?",
       excerpt: "Explore how technology is revolutionizing residential properties across major Nigerian cities and what it means for property values.",
       author: "Michael Chen",
       date: "2024-01-12",
       category: "Technology",
-      image: "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=800&h=400&fit=crop",
+      image:nigeria,
       readTime: "7 min read"
     },
     {
       id: 3,
-      title: "Investment Opportunities in African Real Estate Markets",
+      title: "Investment Opportunities in Kenyan Real Estate Markets",
       excerpt: "Discover the most promising real estate investment opportunities across Africa and how to maximize your returns.",
       author: "Emma Williams",
       date: "2024-01-10",
       category: "Investment",
-      image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&h=400&fit=crop",
+      image: h1,
       readTime: "6 min read"
     },
     {
       id: 4,
-      title: "Sustainable Building Practices in Modern African Architecture",
+      title: "Sustainable Building Practices in Modern Kenyan Architecture",
       excerpt: "Learn about eco-friendly construction methods that are shaping the future of African real estate development.",
       author: "David Okafor",
       date: "2024-01-08",
       category: "Sustainability",
-      image: "https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=800&h=400&fit=crop",
+      image: h3,
       readTime: "8 min read"
     },
     {
       id: 5,
-      title: "Market Trends: What to Expect in 2024",
+      title: "Profitable Real Estate Investment Opportunities in Kenya",
       excerpt: "Our comprehensive analysis of real estate market trends and predictions for the African property market in 2024.",
       author: "Sarah Johnson",
       date: "2024-01-05",
       category: "Market Analysis",
-      image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&h=400&fit=crop",
+      image: nbo,
       readTime: "10 min read"
     },
     {
       id: 6,
-      title: "Legal Considerations When Buying Property in Africa",
+      title: "How to Increase Your Property Value Before Selling",
       excerpt: "Understanding the legal framework and documentation required for property transactions across different African countries.",
       author: "Michael Chen",
       date: "2024-01-03",
       category: "Legal",
-      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=400&fit=crop",
+      image: hmerket,
       readTime: "12 min read"
     }
   ];

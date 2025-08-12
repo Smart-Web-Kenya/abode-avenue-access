@@ -1,14 +1,21 @@
 
 import { useState } from 'react';
 
+import award from '@/assets/images/award.webp';
+import property from '@/assets/images/propertyas.jpeg';
+import banking from '@/assets/images/bnking.jpg';
+import insurance from '@/assets/images/insurance.webp';
+import legal from '@/assets/images/legal.png';
+import partner from '@/assets/images/plp.jpg'
+
 const PartnersAwards = () => {
   const partners = [
-    { name: "Real Estate Board", logo: "https://via.placeholder.com/120x60/036153/FFFFFF?text=REB" },
-    { name: "Property Association", logo: "https://via.placeholder.com/120x60/FF6500/FFFFFF?text=PA" },
-    { name: "Banking Partner", logo: "https://via.placeholder.com/120x60/036153/FFFFFF?text=BANK" },
-    { name: "Insurance Partner", logo: "https://via.placeholder.com/120x60/FF6500/FFFFFF?text=INS" },
-    { name: "Legal Partners", logo: "https://via.placeholder.com/120x60/036153/FFFFFF?text=LAW" },
-    { name: "Award Body", logo: "https://via.placeholder.com/120x60/FF6500/FFFFFF?text=AWARD" }
+    { name: "Real Estate Board", logo: partner },
+    { name: "Property Association", logo: property },
+    { name: "Banking Partner", logo: banking },
+    { name: "Insurance Partner", logo: insurance },
+    { name: "Legal Partners", logo: legal },
+    { name: "Award Body", logo: award }
   ];
 
   return (

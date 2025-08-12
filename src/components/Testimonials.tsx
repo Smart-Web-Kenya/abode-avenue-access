@@ -1,29 +1,32 @@
 
 import { Star } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import person1 from '@/assets/images/person1.jpg';
+import person4 from '@/assets/images/person4.jpeg';
+import person3 from '@/assets/images/person3.jpg';
 
 const Testimonials = () => {
   const testimonials = [
     {
-      name: "Sarah Johnson",
+      name: "Bensom Ochieng",
       role: "Property Buyer",
       content: "Outstanding service from start to finish. The team helped us find our dream home and made the entire process seamless.",
       rating: 5,
-      image: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face"
+      image: person1
     },
     {
       name: "Michael Chen",
       role: "Real Estate Investor",
       content: "Professional, knowledgeable, and always available. They've helped me build an impressive property portfolio.",
       rating: 5,
-      image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face"
+      image: person3
     },
     {
       name: "Emily Rodriguez",
       role: "First-time Buyer",
       content: "As a first-time buyer, I was nervous about the process. Their guidance and expertise made everything so much easier.",
       rating: 5,
-      image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face"
+      image: person4
     }
   ];
 

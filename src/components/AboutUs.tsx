@@ -1,5 +1,8 @@
 
+import houses from '@/assets/images/houses.jpg';
+
 const AboutUs = () => {
+
   return (
     <section className="py-16 bg-gray-50">
       <div className="container mx-auto px-4">
@@ -28,7 +31,7 @@ const AboutUs = () => {
           
           <div className="relative">
             <img
-              src="https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=600&h=400&fit=crop"
+              src={houses}
               alt="Our team"
               className="rounded-lg shadow-lg w-full h-96 object-cover"
             />

@@ -43,7 +43,7 @@ const SingleListing = () => {
     parking: 1,
     featured: true,
     description: "Experience urban luxury in this stunning downtown loft featuring floor-to-ceiling windows, hardwood floors, and modern finishes throughout. The open-concept design creates a seamless flow between the living, dining, and kitchen areas, perfect for entertaining. The gourmet kitchen boasts stainless steel appliances, quartz countertops, and custom cabinetry.",
-    videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ", // Sample video URL
+    videoUrl: "https://www.youtube.com/embed/6skh1_il_7I", // Sample video URL
     images: [
       "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=1200&h=800&fit=crop",
       "https://images.unsplash.com/photo-1483058712412-4245e9b90334?w=1200&h=800&fit=crop",
@@ -153,7 +153,7 @@ const SingleListing = () => {
                   </div>
                   <div className="text-right">
                     <div className="text-3xl font-bold text-brand-green mb-2">
-                      ${property.price.toLocaleString()}
+                      Ksh.{property.price.toLocaleString()}
                     </div>
                     {property.featured && (
                       <Badge className="bg-brand-green text-white">Featured</Badge>

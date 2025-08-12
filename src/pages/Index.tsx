@@ -14,15 +14,27 @@ import FAQ from '@/components/FAQ';
 import AboutUs from '@/components/AboutUs';
 import Footer from '@/components/Footer';
 
+import img1 from '@/assets/images/img1.jpg';
+import img2 from '@/assets/images/img2.jpg';
+import img3 from '@/assets/images/img3.webp';
+import img4 from '@/assets/images/img4.webp';
+import img5 from '@/assets/images/img5.png';
+import img6 from '@/assets/images/img6.webp';
+import img7 from '@/assets/images/img7.jpg';
+import img8 from '@/assets/images/img8.jpg';
+import img9 from '@/assets/images/img9.webp';
+import img10 from '@/assets/images/img10.jpg';
+import img11 from '@/assets/images/img11.jpg';
+
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const heroImages = [
-    "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=1200&h=800&fit=crop",
-    "https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=1200&h=800&fit=crop",
-    "https://images.unsplash.com/photo-1483058712412-4245e9b90334?w=1200&h=800&fit=crop",
-    "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&h=800&fit=crop"
+    img6,
+    img8,
+    img5,
+    img2,
   ];
 
   // Auto-slide functionality
@@ -39,31 +51,31 @@ const Index = () => {
       id: 1,
       title: "Modern Downtown Loft",
       price: 450000,
-      location: "Downtown District",
+      location: "Nairobi,Runda",
       bedrooms: 2,
       bathrooms: 2,
       sqft: 1200,
-      image: "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=800&h=600&fit=crop"
+      image: img5
     },
     {
       id: 2,
       title: "Luxury Family Home",
       price: 750000,
-      location: "Suburban Hills",
+      location: "Nairobi, Karen",
       bedrooms: 4,
       bathrooms: 3,
       sqft: 2400,
-      image: "https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=800&h=600&fit=crop"
+      image: img9
     },
     {
       id: 3,
       title: "Cozy Studio Apartment",
       price: 225000,
-      location: "Arts Quarter",
+      location: "Nairobi, Westlands",
       bedrooms: 1,
       bathrooms: 1,
       sqft: 650,
-      image: "https://images.unsplash.com/photo-1483058712412-4245e9b90334?w=800&h=600&fit=crop"
+      image: img4
     }
   ];
 
@@ -170,7 +182,7 @@ const Index = () => {
                 </Button>
               </Link>
               <Link to="/archive">
-                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-gray-900 px-8 py-4 text-lg">
+                <Button size="lg" variant="outline" className="border-white text-brand-green hover:bg-white hover:text-gray-900 px-8 py-4 text-lg">
                   Book a Viewing
                 </Button>
               </Link>
@@ -225,7 +237,7 @@ const Index = () => {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-2xl font-bold text-brand-green">
-                        ${property.price.toLocaleString()}
+                        Ksh.{property.price.toLocaleString()}
                       </span>
                       <Button variant="outline" size="sm" onClick={(e) => e.stopPropagation()}>
                         View Details
@@ -279,7 +291,7 @@ const Index = () => {
               </Button>
             </Link>
             <Link to="/archive">
-              <Button size="lg" variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800">
+              <Button size="lg" variant="outline" className="border-gray-600 text-gray-600 hover:bg-gray-800">
                 Browse Properties
               </Button>
             </Link>
