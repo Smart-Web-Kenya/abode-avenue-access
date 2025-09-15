@@ -115,6 +115,75 @@ const PropertyForm = ({ onClose, property }: PropertyFormProps) => {
     }));
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      // Prepare the property data for submission
+      const propertyData = {
+        title: formData.title,
+        price: Number(formData.price) || 0,
+        description: formData.description,
+        bedrooms: Number(formData.bedrooms) || 0,
+        bathrooms: Number(formData.bathrooms) || 0,
+        sqft: Number(formData.sqft) || 0,
+        yearBuilt: formData.yearBuilt ? Number(formData.yearBuilt) : undefined,
+        video360Url: formData.video360Url || undefined,
+        images: formData.images.filter((img: string) => img.trim() !== ''),
+        contactPhones: formData.contactPhones.filter((phone: string) => phone.trim() !== ''),
+        socialMedia: {
+          facebook: formData.socialMedia.facebook || undefined,
+          instagram: formData.socialMedia.instagram || undefined,
+          twitter: formData.socialMedia.twitter || undefined,
+          whatsapp: formData.socialMedia.whatsapp || undefined
+        },
+        location: {
+          country: formData.location.country,
+          city: formData.location.city,
+          area: formData.location.area,
+          subArea: formData.location.subArea
+        },
+        category: formData.category,
+        selectedAmenities: formData.selectedAmenities
+      };
+
+      // Determine the API endpoint and method based on whether we're creating or updating
+      const url = property?._id 
+        ? `http://127.0.0.1:3000/api/v1/properties/${property._id}`
+        : 'http://127.0.0.1:3000/api/v1/properties';
+      
+      const method = property?._id ? 'put' : 'post';
+      
+      // Make the API request
+      const response = await axios[method](url, propertyData, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      // Show success message
+      alert(`Property ${property?._id ? 'updated' : 'created'} successfully!`);
+      
+      // Close the form and refresh the properties list
+      onClose();
+      
+    } catch (error) {
+      console.error('Error saving property:', error);
+      
+      // Show user-friendly error message
+      let errorMessage = 'Failed to save property. Please try again.';
+      
+      if (axios.isAxiosError(error)) {
+        // Handle axios-specific error
+        errorMessage = error.response?.data?.message || error.message || errorMessage;
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
+      alert(errorMessage);
+    }
+  };
+
   // Find the selected category name for display
   const selectedCategory = categories.find(cat => cat._id === formData.category);
 
@@ -480,7 +549,7 @@ const PropertyForm = ({ onClose, property }: PropertyFormProps) => {
         <Button variant="outline" onClick={onClose}>
           Cancel
         </Button>
-        <Button className="bg-teal-600 hover:bg-teal-700">
+        <Button className="bg-teal-600 hover:bg-teal-700" onClick={handleSubmit}>
           Save Property
         </Button>
       </div>

@@ -29,36 +29,41 @@ const AdminProperties = () => {
   // Fetch properties from API
   const fetchProperties = async (search = '', page = 1) => {
     try {
+      // console.log('Fetching properties with params:', { search, page, limit: pagination.limit });
       setIsLoading(true);
       const response = await axios.get('http://127.0.0.1:3000/api/v1/properties', {
         params: {
           search,
           page,
-          limit: pagination.limit
+          limit: pagination.limit,
+          populate: 'category',
+          sort: '-createdAt'
         }
       });
       
-      // Safely handle the API response
-      const responseData = response.data || {};
-      const propertiesList = Array.isArray(responseData.data) ? responseData.data : [];
       
+      // Handle the response structure
+      const responseData = response.data || {};
+      const propertiesList = Array.isArray(responseData.properties) 
+        ? responseData.properties 
+        : [];
+      
+      
+      // Update state with the properties and pagination
       setProperties(propertiesList);
-      setPagination({
-        ...pagination,
-        page: responseData.page || 1,
-        total: responseData.total || 0,
+      setPagination(prev => ({
+        ...prev,
+        page: responseData.currentPage || 1,
+        total: responseData.totalItems || 0,
         totalPages: responseData.totalPages || 1
-      });
+      }));
+      
     } catch (error) {
       console.error('Error fetching properties:', error);
-      // Reset to empty array on error
+      if (axios.isAxiosError(error)) {
+        console.error('Error response:', error.response?.data);
+      }
       setProperties([]);
-      setPagination({
-        ...pagination,
-        page: 1,
-        total: 0,
-        totalPages: 1
-      });
     } finally {
       setIsLoading(false);
     }
@@ -99,11 +104,9 @@ const AdminProperties = () => {
     
     try {
       await axios.delete(`http://127.0.0.1:3000/api/v1/properties/${propertyId}`);
-      // Refresh the properties list
       fetchProperties(searchTerm, pagination.page);
     } catch (error) {
       console.error('Error deleting property:', error);
-      // Show error message
     }
   };
 
@@ -112,7 +115,6 @@ const AdminProperties = () => {
       await axios.patch(`http://127.0.0.1:3000/api/v1/properties/${propertyId}/status`, {
         active: !currentStatus
       });
-      // Update local state
       setProperties(properties.map(prop => 
         prop._id === propertyId ? { ...prop, active: !currentStatus } : prop
       ));
@@ -125,7 +127,68 @@ const AdminProperties = () => {
     setPagination({...pagination, page: newPage});
   };
 
-  // Change the loading check to be more specific
+  const renderPropertyRow = (property: any) => (
+    <TableRow key={property._id}>
+      <TableCell>
+        <div>
+          <p className="font-medium">{property.title}</p>
+          <p className="text-sm text-gray-500">
+            {new Date(property.createdAt).toLocaleDateString()}
+          </p>
+        </div>
+      </TableCell>
+      <TableCell>
+        {property.location?.city && (
+          <span>
+            {property.location.city}
+            {property.location.area && `, ${property.location.area}`}
+          </span>
+        )}
+      </TableCell>
+      <TableCell className="font-medium">
+        ${property.price?.toLocaleString()}
+      </TableCell>
+      <TableCell>
+        <Badge className={getStatusBadge(property.status || 'Available')}>
+          {property.status || 'Available'}
+        </Badge>
+      </TableCell>
+      <TableCell>
+        {property.category?.name || 'N/A'}
+        {property.category?.type && (
+          <span className="text-xs text-gray-500 block">{property.category.type}</span>
+        )}
+      </TableCell>
+      <TableCell>{property.views || 0}</TableCell>
+      <TableCell>
+        <div className="flex items-center space-x-2">
+          <Switch 
+            checked={property.active !== false}
+            onCheckedChange={() => handleToggleStatus(property._id, property.active !== false)}
+          />
+          <Button variant="ghost" size="sm">
+            <Eye className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => handleEdit(property)}
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-red-600" 
+            onClick={() => handleDelete(property._id)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+
   if (isLoading && (!properties || properties.length === 0)) {
     return (
       <AdminLayout>
@@ -136,7 +199,6 @@ const AdminProperties = () => {
     );
   }
 
-  // Ensure properties is always an array
   const propertiesList = Array.isArray(properties) ? properties : [];
 
   return (
@@ -215,62 +277,20 @@ const AdminProperties = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {propertiesList.length > 0 ? (
-                    propertiesList.map((property) => (
-                      <TableRow key={property._id}>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium">{property.title}</p>
-                            <p className="text-sm text-gray-500">
-                              Added {new Date(property.createdAt).toLocaleDateString()}
-                            </p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {property.location?.city}, {property.location?.area}
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          ${property.price?.toLocaleString()}
-                        </TableCell>
-                        <TableCell>
-                          <Badge className={getStatusBadge(property.status)}>
-                            {property.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{property.category}</TableCell>
-                        <TableCell>{property.views || 0}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <Switch 
-                              checked={property.active}
-                              onCheckedChange={() => handleToggleStatus(property._id, property.active)}
-                            />
-                            <Button variant="ghost" size="sm">
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              onClick={() => handleEdit(property)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="text-red-600" 
-                              onClick={() => handleDelete(property._id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
+                  {isLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8">
+                        <div className="flex items-center justify-center">
+                          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-brand-green"></div>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : properties.length > 0 ? (
+                    propertiesList.map(renderPropertyRow)
                   ) : (
                     <TableRow>
                       <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                        {isLoading ? 'Loading...' : 'No properties found'}
+                        No properties found
                       </TableCell>
                     </TableRow>
                   )}
