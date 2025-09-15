@@ -1,5 +1,5 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,7 +12,16 @@ interface PropertyFormProps {
   property?: any; // Optional property for editing
 }
 
+interface Category {
+  _id: string;
+  name: string;
+  type: string;
+}
+
 const PropertyForm = ({ onClose, property }: PropertyFormProps) => {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(false);
+  
   const [formData, setFormData] = useState({
     title: property?.title || '',
     price: property?.price || '',
@@ -37,7 +46,7 @@ const PropertyForm = ({ onClose, property }: PropertyFormProps) => {
       area: property?.location?.area || '',
       subArea: property?.location?.subArea || ''
     },
-    category: property?.category || ''
+    category: property?.category?._id || property?.category || ''
   });
 
   const mockAmenities = [
@@ -59,10 +68,22 @@ const PropertyForm = ({ onClose, property }: PropertyFormProps) => {
     }
   };
 
-  const categories = [
-    'Maisonette', 'Bungalow', '1 Bedroom', '2 Bedroom', '3 Bedroom', 
-    '4 Bedroom', 'Studio', 'Bedsitter', 'Penthouse'
-  ];
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setIsLoadingCategories(true);
+        const response = await axios.get('http://127.0.0.1:3000/api/v1/categories');
+        setCategories(Array.isArray(response.data) ? response.data : []);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+        setCategories([]);
+      } finally {
+        setIsLoadingCategories(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const addContactPhone = () => {
     setFormData(prev => ({
@@ -93,6 +114,9 @@ const PropertyForm = ({ onClose, property }: PropertyFormProps) => {
         : [...prev.selectedAmenities, amenity]
     }));
   };
+
+  // Find the selected category name for display
+  const selectedCategory = categories.find(cat => cat._id === formData.category);
 
   return (
     <div className="space-y-6">
@@ -398,21 +422,30 @@ const PropertyForm = ({ onClose, property }: PropertyFormProps) => {
           <CardTitle>Property Category</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-3 gap-3">
-            {categories.map((category) => (
-              <button
-                key={category}
-                type="button"
-                onClick={() => setFormData(prev => ({ ...prev, category }))}
-                className={`p-3 border rounded-lg text-center transition-colors ${
-                  formData.category === category
-                    ? 'border-teal-500 bg-teal-50 text-teal-700'
-                    : 'border-gray-300 hover:border-gray-400'
-                }`}
-              >
-                {category}
-              </button>
-            ))}
+          <div className="space-y-2">
+            <Label htmlFor="category">Category</Label>
+            <select
+              id="category"
+              value={formData.category}
+              onChange={(e) => setFormData({...formData, category: e.target.value})}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={isLoadingCategories}
+            >
+              <option value="">Select a category</option>
+              {categories.map((category) => (
+                <option key={category._id} value={category._id}>
+                  {category.name} ({category.type})
+                </option>
+              ))}
+            </select>
+            {selectedCategory && (
+              <p className="text-sm text-muted-foreground">
+                Selected: {selectedCategory.name} ({selectedCategory.type})
+              </p>
+            )}
+            {isLoadingCategories && (
+              <p className="text-sm text-muted-foreground">Loading categories...</p>
+            )}
           </div>
         </CardContent>
       </Card>

@@ -59,12 +59,43 @@ const AdminCategories = () => {
     setIsEditDialogOpen(true);
   };
 
-  const handleDelete = (categoryId: number) => {
-    console.log('Deleting category:', categoryId);
+  const handleDelete = async (categoryId: string) => {
+    if (!window.confirm('Are you sure you want to delete this category?')) {
+      return;
+    }
+    
+    try {
+      await axios.delete(`http://127.0.0.1:3000/api/v1/categories/${categoryId}`);
+      
+      // Remove the category from the local state
+      setCategories(categories.filter(cat => cat.id !== categoryId));
+      
+      // Show success message
+      console.log('Category deleted successfully');
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      if (error.response?.data?.msg) {
+        alert(error.response.data.msg);
+      } else {
+        alert('Failed to delete category. Please try again.');
+      }
+    }
   };
 
-  const handleToggleStatus = (categoryId: number, currentStatus: boolean) => {
-    console.log('Toggling status for category:', categoryId, 'from', currentStatus, 'to', !currentStatus);
+  const handleToggleStatus = async (categoryId: string, currentStatus: boolean) => {
+    try {
+      const response = await axios.patch(`http://127.0.0.1:3000/api/v1/categories/${categoryId}/status`);
+      
+      // Update the category in the local state
+      setCategories(categories.map(cat => 
+        cat.id === categoryId 
+          ? { ...cat, active: response.data.active } 
+          : cat
+      ));
+    } catch (error) {
+      console.error('Error toggling category status:', error);
+      // You might want to show an error toast here
+    }
   };
 
   const handleAddCategory = async () => {
@@ -90,6 +121,36 @@ const AdminCategories = () => {
     } catch (error) {
       console.error('Error adding category:', error);
       // Handle error (you might want to show an error message to the user)
+    }
+  };
+
+  const handleUpdateCategory = async () => {
+    if (!selectedCategory) return;
+    
+    try {
+      const response = await axios.put(
+        `http://127.0.0.1:3000/api/v1/categories/${selectedCategory.id}`,
+        {
+          name: selectedCategory.name,
+          description: selectedCategory.description,
+          type: selectedCategory.type,
+          active: selectedCategory.active
+        }
+      );
+      
+      // Update the category in the local state
+      setCategories(categories.map(cat => 
+        cat.id === selectedCategory.id ? response.data : cat
+      ));
+      
+      setIsEditDialogOpen(false);
+      setSelectedCategory(null);
+      
+      // Show success message
+      console.log('Category updated successfully:', response.data);
+    } catch (error) {
+      console.error('Error updating category:', error);
+      // Show error message
     }
   };
 
@@ -259,34 +320,71 @@ const AdminCategories = () => {
             <DialogHeader>
               <DialogTitle>Edit Category</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="editCategoryName">Category Name</Label>
-                <Input
-                  id="editCategoryName"
-                  value={selectedCategory?.name || ''}
-                  onChange={(e) => setSelectedCategory(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="e.g., 5 Bedroom"
-                />
+            {selectedCategory && (
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="editCategoryName">Category Name</Label>
+                  <Input
+                    id="editCategoryName"
+                    value={selectedCategory?.name || ''}
+                    onChange={(e) => setSelectedCategory({...selectedCategory, name: e.target.value})}
+                    placeholder="e.g., 5 Bedroom"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="editCategoryDescription">Description</Label>
+                  <Input
+                    id="editCategoryDescription"
+                    value={selectedCategory?.description || ''}
+                    onChange={(e) => setSelectedCategory({...selectedCategory, description: e.target.value})}
+                    placeholder="Brief description of the category"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="editCategoryType">Category Type</Label>
+                  <select
+                    id="editCategoryType"
+                    value={selectedCategory?.type || 'Property Type'}
+                    onChange={(e) => setSelectedCategory({...selectedCategory, type: e.target.value})}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {categoryTypes.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="editCategoryStatus"
+                    checked={selectedCategory?.active ?? true}
+                    onCheckedChange={(checked) => setSelectedCategory({...selectedCategory, active: checked})}
+                  />
+                  <Label htmlFor="editCategoryStatus">
+                    {selectedCategory?.active ? 'Active' : 'Inactive'}
+                  </Label>
+                </div>
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setIsEditDialogOpen(false);
+                      setSelectedCategory(null);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    className="bg-brand-green hover:bg-brand-green/90"
+                    onClick={handleUpdateCategory}
+                    disabled={!selectedCategory?.name?.trim()}
+                  >
+                    Update Category
+                  </Button>
+                </div>
               </div>
-              <div>
-                <Label htmlFor="editCategoryDescription">Description</Label>
-                <Input
-                  id="editCategoryDescription"
-                  value={selectedCategory?.description || ''}
-                  onChange={(e) => setSelectedCategory(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Brief description of the category"
-                />
-              </div>
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button className="bg-brand-green hover:bg-brand-green/90">
-                  Update Category
-                </Button>
-              </div>
-            </div>
+            )}
           </DialogContent>
         </Dialog>
       </div>
