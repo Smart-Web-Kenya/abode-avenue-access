@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,6 +13,8 @@ import { Plus, Edit, Trash2, Home } from 'lucide-react';
 const AdminCategories = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [categories, setCategories] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<any>(null);
   const [newCategory, setNewCategory] = useState({
     name: '',
@@ -19,89 +22,20 @@ const AdminCategories = () => {
     type: 'property'
   });
 
-  const categories = [
-    {
-      id: 1,
-      name: 'Maisonette',
-      description: 'Multi-level residential property',
-      type: 'Property Type',
-      active: true,
-      propertiesCount: 25,
-      dateCreated: '2024-01-10'
-    },
-    {
-      id: 2,
-      name: 'Bungalow',
-      description: 'Single-story detached house',
-      type: 'Property Type',
-      active: true,
-      propertiesCount: 18,
-      dateCreated: '2024-01-08'
-    },
-    {
-      id: 3,
-      name: '1 Bedroom',
-      description: 'Single bedroom apartment',
-      type: 'Bedroom Count',
-      active: true,
-      propertiesCount: 45,
-      dateCreated: '2024-01-05'
-    },
-    {
-      id: 4,
-      name: '2 Bedroom',
-      description: 'Two bedroom apartment or house',
-      type: 'Bedroom Count',
-      active: false,
-      propertiesCount: 62,
-      dateCreated: '2024-01-05'
-    },
-    {
-      id: 5,
-      name: '3 Bedroom',
-      description: 'Three bedroom house or apartment',
-      type: 'Bedroom Count',
-      active: true,
-      propertiesCount: 38,
-      dateCreated: '2024-01-05'
-    },
-    {
-      id: 6,
-      name: '4 Bedroom',
-      description: 'Four bedroom house',
-      type: 'Bedroom Count',
-      active: true,
-      propertiesCount: 22,
-      dateCreated: '2024-01-05'
-    },
-    {
-      id: 7,
-      name: 'Studio',
-      description: 'Open plan single room living space',
-      type: 'Property Type',
-      active: true,
-      propertiesCount: 15,
-      dateCreated: '2024-01-03'
-    },
-    {
-      id: 8,
-      name: 'Bedsitter',
-      description: 'Single room with kitchenette',
-      type: 'Property Type',
-      active: true,
-      propertiesCount: 32,
-      dateCreated: '2024-01-03'
-    },
-    {
-      id: 9,
-      name: 'Penthouse',
-      description: 'Luxury apartment on top floor',
-      type: 'Property Type',
-      active: true,
-      propertiesCount: 8,
-      dateCreated: '2024-01-01'
-    }
-  ];
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get('http://127.0.0.1:3000/api/v1/categories/');
+        setCategories(response.data);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const categoryTypes = [
     'Property Type',
@@ -133,11 +67,41 @@ const AdminCategories = () => {
     console.log('Toggling status for category:', categoryId, 'from', currentStatus, 'to', !currentStatus);
   };
 
-  const handleAddCategory = () => {
-    console.log('Adding category:', newCategory);
-    setNewCategory({ name: '', description: '', type: 'property' });
-    setIsAddDialogOpen(false);
+  const handleAddCategory = async () => {
+    try {
+      const response = await axios.post('http://127.0.0.1:3000/api/v1/categories/', {
+        name: newCategory.name,
+        description: newCategory.description,
+        type: newCategory.type,
+        active: true,
+        propertiesCount: 0,
+        dateCreated: new Date().toISOString().split('T')[0]
+      });
+      
+      // Add the new category to the list
+      setCategories([...categories, response.data]);
+      
+      // Reset form and close modal
+      setNewCategory({ name: '', description: '', type: 'property' });
+      setIsAddDialogOpen(false);
+      
+      // Show success message (you might want to add a toast notification here)
+      console.log('Category added successfully:', response.data);
+    } catch (error) {
+      console.error('Error adding category:', error);
+      // Handle error (you might want to show an error message to the user)
+    }
   };
+
+  if (isLoading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-green"></div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
@@ -164,7 +128,7 @@ const AdminCategories = () => {
                   <Input
                     id="categoryName"
                     value={newCategory.name}
-                    onChange={(e) => setNewCategory(prev => ({ ...prev, name: e.target.value }))}
+                    onChange={(e) => setNewCategory({...newCategory, name: e.target.value})}
                     placeholder="e.g., 5 Bedroom"
                   />
                 </div>
@@ -174,7 +138,7 @@ const AdminCategories = () => {
                   <Input
                     id="categoryDescription"
                     value={newCategory.description}
-                    onChange={(e) => setNewCategory(prev => ({ ...prev, description: e.target.value }))}
+                    onChange={(e) => setNewCategory({...newCategory, description: e.target.value})}
                     placeholder="Brief description of the category"
                   />
                 </div>
@@ -183,9 +147,9 @@ const AdminCategories = () => {
                   <Label htmlFor="categoryType">Category Type</Label>
                   <select
                     id="categoryType"
-                    className="w-full p-2 border border-gray-300 rounded-lg"
                     value={newCategory.type}
-                    onChange={(e) => setNewCategory(prev => ({ ...prev, type: e.target.value }))}
+                    onChange={(e) => setNewCategory({...newCategory, type: e.target.value})}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {categoryTypes.map((type) => (
                       <option key={type} value={type}>
@@ -199,7 +163,11 @@ const AdminCategories = () => {
                   <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                     Cancel
                   </Button>
-                  <Button onClick={handleAddCategory} className="bg-brand-green hover:bg-brand-green/90">
+                  <Button 
+                    className="bg-brand-green hover:bg-brand-green/90"
+                    onClick={handleAddCategory}
+                    disabled={!newCategory.name.trim()}
+                  >
                     Add Category
                   </Button>
                 </div>
