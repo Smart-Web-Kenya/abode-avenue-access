@@ -24,13 +24,23 @@ interface Category {
   type: string;
 }
 
+interface Amenity {
+  _id: string;
+  name: string;
+}
+
+interface Location {
+  _id: string;
+  name: string;
+  level: 'country' | 'city' | 'area' | 'subarea';
+}
+
 const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Keep both files and already uploaded images
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [formData, setFormData] = useState({
     title: property?.title || '',
@@ -49,9 +59,9 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
       twitter: property?.socialMedia?.twitter || '',
       whatsapp: property?.socialMedia?.whatsapp || ''
     },
-    selectedAmenities: property?.selectedAmenities || [] as string[],
+    selectedAmenities: property?.amenities?.map((a: any) => a.name) || [],
     location: {
-      country: property?.location?.country || 'Kenya',
+      country: property?.location?.country || '',
       city: property?.location?.city || '',
       area: property?.location?.area || '',
       subArea: property?.location?.subArea || ''
@@ -61,11 +71,67 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
+  const [amenities, setAmenities] = useState<Amenity[]>([]);
+  const [locations, setLocations] = useState<{ countries: Location[], cities: Location[], areas: Location[], subareas: Location[] }>({ countries: [], cities: [], areas: [], subareas: [] });
 
-  const mockAmenities = [
-    'WiFi', 'Parking', 'Swimming Pool', 'Gym', 'Security', 'Garden',
-    'Balcony', 'Air Conditioning', 'Elevator', 'Generator'
-  ];
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        // Fetch amenities
+        const amenitiesRes = await axios.get('http://127.0.0.1:3000/api/v1/amenities?active=true');
+        const flattenedAmenities = Object.values(amenitiesRes.data.data).flat() as Amenity[];
+        setAmenities(flattenedAmenities);
+
+        // Fetch top-level locations (countries)
+        const countriesRes = await axios.get('http://127.0.0.1:3000/api/v1/locations?level=country');
+        setLocations(prev => ({ ...prev, countries: countriesRes.data.data }));
+      } catch (error) {
+        console.error('Error fetching initial data:', error);
+        toast({ title: 'Error', description: 'Failed to load form data', variant: 'destructive' });
+      }
+    };
+    fetchInitialData();
+  }, [toast]);
+
+  const handleLocationChange = async (level: 'country' | 'city' | 'area', parentId: string) => {
+    const newLocationState = { ...formData.location };
+    let nextLocationsState = { ...locations };
+
+    if (level === 'country') {
+      newLocationState.country = parentId;
+      newLocationState.city = '';
+      newLocationState.area = '';
+      newLocationState.subArea = '';
+      nextLocationsState.cities = [];
+      nextLocationsState.areas = [];
+      nextLocationsState.subareas = [];
+      if (parentId) {
+        const citiesRes = await axios.get(`http://127.0.0.1:3000/api/v1/locations?level=city&parent=${parentId}`);
+        nextLocationsState.cities = citiesRes.data.data;
+      }
+    } else if (level === 'city') {
+      newLocationState.city = parentId;
+      newLocationState.area = '';
+      newLocationState.subArea = '';
+      nextLocationsState.areas = [];
+      nextLocationsState.subareas = [];
+      if (parentId) {
+        const areasRes = await axios.get(`http://127.0.0.1:3000/api/v1/locations?level=area&parent=${parentId}`);
+        nextLocationsState.areas = areasRes.data.data;
+      }
+    } else if (level === 'area') {
+      newLocationState.area = parentId;
+      newLocationState.subArea = '';
+      nextLocationsState.subareas = [];
+      if (parentId) {
+        const subareasRes = await axios.get(`http://127.0.0.1:3000/api/v1/locations?level=subarea&parent=${parentId}`);
+        nextLocationsState.subareas = subareasRes.data.data;
+      }
+    }
+
+    setFormData(prev => ({ ...prev, location: newLocationState }));
+    setLocations(nextLocationsState);
+  };
 
   const validatePhoneNumber = (phone: string): boolean => {
     const phoneRegex = /^(\+254|0)?[17]\d{8}$/;
@@ -103,7 +169,6 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
     }));
   };
 
-  // ✅ Instead of uploading here, just store files in state
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
@@ -131,7 +196,6 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
     setIsSubmitting(true);
 
     try {
-      // ✅ Build FormData with all fields + images
       const fd = new FormData();
       fd.append('title', formData.title);
       fd.append('price', formData.price.toString());
@@ -147,10 +211,7 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
       formData.contactPhones.forEach(p => fd.append('contactPhones[]', p));
       formData.selectedAmenities.forEach(a => fd.append('selectedAmenities[]', a));
 
-      // Already uploaded images (when editing)
       formData.images.forEach(img => fd.append('existingImages[]', JSON.stringify(img)));
-
-      // New files
       selectedFiles.forEach(file => fd.append('images', file));
 
       let response;
@@ -205,7 +266,6 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 p-4">
-      {/* Basic Information Card */}
       <Card>
         <CardHeader>
           <CardTitle>Basic Information</CardTitle>
@@ -305,7 +365,6 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
         </CardContent>
       </Card>
 
-      {/* Category Selection */}
       <Card>
         <CardHeader>
           <CardTitle>Property Category *</CardTitle>
@@ -333,7 +392,6 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
         </CardContent>
       </Card>
 
-      {/* Location Information */}
       <Card>
         <CardHeader>
           <CardTitle>Location</CardTitle>
@@ -342,64 +400,42 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="country">Country</Label>
-              <Input
-                id="country"
-                value={formData.location.country}
-                onChange={(e) => setFormData({
-                  ...formData,
-                  location: { ...formData.location, country: e.target.value }
-                })}
-                placeholder="Country"
-              />
+              <select id="country" value={formData.location.country} onChange={(e) => handleLocationChange('country', e.target.value)} className="w-full p-2 border rounded-md">
+                <option value="">Select Country</option>
+                {locations.countries.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+              </select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="city">City</Label>
-              <Input
-                id="city"
-                value={formData.location.city}
-                onChange={(e) => setFormData({
-                  ...formData,
-                  location: { ...formData.location, city: e.target.value }
-                })}
-                placeholder="City"
-              />
+              <select id="city" value={formData.location.city} onChange={(e) => handleLocationChange('city', e.target.value)} className="w-full p-2 border rounded-md" disabled={!formData.location.country}>
+                <option value="">Select City</option>
+                {locations.cities.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+              </select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="area">Area</Label>
-              <Input
-                id="area"
-                value={formData.location.area}
-                onChange={(e) => setFormData({
-                  ...formData,
-                  location: { ...formData.location, area: e.target.value }
-                })}
-                placeholder="Area/Neighborhood"
-              />
+              <select id="area" value={formData.location.area} onChange={(e) => handleLocationChange('area', e.target.value)} className="w-full p-2 border rounded-md" disabled={!formData.location.city}>
+                <option value="">Select Area</option>
+                {locations.areas.map(a => <option key={a._id} value={a._id}>{a.name}</option>)}
+              </select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="subArea">Sub Area</Label>
-              <Input
-                id="subArea"
-                value={formData.location.subArea}
-                onChange={(e) => setFormData({
-                  ...formData,
-                  location: { ...formData.location, subArea: e.target.value }
-                })}
-                placeholder="Sub Area (Optional)"
-              />
+              <select id="subArea" value={formData.location.subArea} onChange={(e) => setFormData(prev => ({ ...prev, location: { ...prev.location, subArea: e.target.value } }))} className="w-full p-2 border rounded-md" disabled={!formData.location.area}>
+                <option value="">Select Sub Area</option>
+                {locations.subareas.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
+              </select>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Image Upload Section */}
       <Card>
         <CardHeader>
           <CardTitle>Property Images</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-4">
-            {/* Existing images */}
             {formData.images.map((img, index) => (
               <div key={img.public_id || index} className="relative group">
                 <div className="w-32 h-32 rounded-md overflow-hidden border border-gray-200">
@@ -414,15 +450,11 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
                 </button>
               </div>
             ))}
-
-            {/* New files preview */}
             {selectedFiles.map((file, index) => (
               <div key={index} className="w-32 h-32 rounded-md overflow-hidden border border-gray-200">
                 <img src={URL.createObjectURL(file)} alt="" className="w-full h-full object-cover" />
               </div>
             ))}
-
-            {/* Upload button */}
             <div
               className="w-32 h-32 border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors"
               onClick={() => fileInputRef.current?.click()}
@@ -448,7 +480,6 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
         </CardContent>
       </Card>
 
-      {/* Contact Information */}
       <Card>
         <CardHeader>
           <CardTitle>Contact Information</CardTitle>
@@ -502,10 +533,7 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
                     <Input
                       id="whatsapp"
                       value={formData.socialMedia.whatsapp}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        socialMedia: { ...prev.socialMedia, whatsapp: e.target.value }
-                      }))}
+                      onChange={(e) => setFormData(prev => ({ ...prev, socialMedia: { ...prev.socialMedia, whatsapp: e.target.value } }))}
                       placeholder="+254 712 345 678"
                     />
                   </div>
@@ -515,10 +543,7 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
                   <Input
                     id="facebook"
                     value={formData.socialMedia.facebook}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      socialMedia: { ...prev.socialMedia, facebook: e.target.value }
-                    }))}
+                    onChange={(e) => setFormData(prev => ({ ...prev, socialMedia: { ...prev.socialMedia, facebook: e.target.value } }))}
                     placeholder="facebook.com/username"
                   />
                 </div>
@@ -527,10 +552,7 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
                   <Input
                     id="instagram"
                     value={formData.socialMedia.instagram}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      socialMedia: { ...prev.socialMedia, instagram: e.target.value }
-                    }))}
+                    onChange={(e) => setFormData(prev => ({ ...prev, socialMedia: { ...prev.socialMedia, instagram: e.target.value } }))}
                     placeholder="instagram.com/username"
                   />
                 </div>
@@ -539,10 +561,7 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
                   <Input
                     id="twitter"
                     value={formData.socialMedia.twitter}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      socialMedia: { ...prev.socialMedia, twitter: e.target.value }
-                    }))}
+                    onChange={(e) => setFormData(prev => ({ ...prev, socialMedia: { ...prev.socialMedia, twitter: e.target.value } }))}
                     placeholder="twitter.com/username"
                   />
                 </div>
@@ -552,23 +571,22 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
         </CardContent>
       </Card>
 
-      {/* Amenities */}
       <Card>
         <CardHeader>
           <CardTitle>Amenities</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
-            {mockAmenities.map((amenity) => (
+            {amenities.map((amenity) => (
               <Button
-                key={amenity}
+                key={amenity._id}
                 type="button"
-                variant={formData.selectedAmenities.includes(amenity) ? "default" : "outline"}
+                variant={formData.selectedAmenities.includes(amenity.name) ? "default" : "outline"}
                 size="sm"
-                onClick={() => toggleAmenity(amenity)}
+                onClick={() => toggleAmenity(amenity.name)}
               >
-                {amenity}
-                {formData.selectedAmenities.includes(amenity) && (
+                {amenity.name}
+                {formData.selectedAmenities.includes(amenity.name) && (
                   <X className="ml-2 h-3 w-3" />
                 )}
               </Button>
@@ -577,7 +595,6 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
         </CardContent>
       </Card>
 
-      {/* 360° Video URL */}
       <Card>
         <CardHeader>
           <CardTitle>360° Virtual Tour</CardTitle>
@@ -596,7 +613,6 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
         </CardContent>
       </Card>
 
-      {/* Form Actions */}
       <div className="flex justify-end space-x-4">
         <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
           Cancel
