@@ -28,6 +28,7 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Keep both files and already uploaded images
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -127,6 +128,7 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
     try {
       // ✅ Build FormData with all fields + images
@@ -180,6 +182,8 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
         description: error.response?.data?.message || error.message,
         variant: 'destructive'
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -594,11 +598,18 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
 
       {/* Form Actions */}
       <div className="flex justify-end space-x-4">
-        <Button type="button" variant="outline" onClick={onClose}>
+        <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
           Cancel
         </Button>
-        <Button type="submit" className="bg-teal-600 hover:bg-teal-700">
-          {property?._id ? 'Update Property' : 'Create Property'}
+        <Button type="submit" className="bg-teal-600 hover:bg-teal-700" disabled={isSubmitting}>
+          {isSubmitting ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+              {property?._id ? 'Updating...' : 'Creating...'}
+            </>
+          ) : (
+            property?._id ? 'Update Property' : 'Create Property'
+          )}
         </Button>
       </div>
     </form>
