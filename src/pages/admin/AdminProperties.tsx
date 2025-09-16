@@ -12,7 +12,10 @@ import { Switch } from '@/components/ui/switch';
 import { Plus, Edit, Trash2, Eye, Search } from 'lucide-react';
 import PropertyForm from '@/components/admin/PropertyForm';
 
+const API_BASE_URL = 'http://127.0.0.1:3000/api/v1';
+
 const AdminProperties = () => {
+  console.log('Component rendering...');
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -28,60 +31,82 @@ const AdminProperties = () => {
 
   // Fetch properties from API
   const fetchProperties = async (search = '', page = 1) => {
+    console.log('Starting fetchProperties with:', { search, page });
+    setIsLoading(true);
     try {
-      // console.log('Fetching properties with params:', { search, page, limit: pagination.limit });
-      setIsLoading(true);
-      const response = await axios.get('http://127.0.0.1:3000/api/v1/properties', {
-        params: {
-          search,
-          page,
-          limit: pagination.limit,
-          populate: 'category',
-          sort: '-createdAt'
-        }
+      console.log('Making API call to:', `${API_BASE_URL}/properties`);
+      const response = await axios.get(`${API_BASE_URL}/properties`, {
+        // params: {
+        //   // search,
+        //   // page,
+        //   // limit: pagination.limit,
+        //   // populate: 'category',
+        //   sort: '-createdAt'
+        // }
       });
-      
-      
-      // Handle the response structure
-      const responseData = response.data || {};
-      const propertiesList = Array.isArray(responseData.properties) 
-        ? responseData.properties 
-        : [];
-      
-      
-      // Update state with the properties and pagination
-      setProperties(propertiesList);
-      setPagination(prev => ({
-        ...prev,
-        page: responseData.currentPage || 1,
-        total: responseData.totalItems || 0,
-        totalPages: responseData.totalPages || 1
-      }));
-      
+
+      console.log('API Response:', response);
+      console.log('Response data:', response.data);
+
+      if (response.data.success) {
+        const propertiesList = Array.isArray(response.data.data) 
+          ? response.data.data 
+          : [];
+        
+        console.log('Processed properties list:', propertiesList);
+        setProperties(propertiesList);
+        
+        console.log('Updating pagination with:', {
+          page: response.data.currentPage || 1,
+          total: response.data.totalItems || 0,
+          totalPages: response.data.totalPages || 1
+        });
+        
+        setPagination(prev => ({
+          ...prev,
+          page: response.data.currentPage || 1,
+          total: response.data.totalItems || 0,
+          totalPages: response.data.totalPages || 1
+        }));
+      } else {
+        console.error('API returned success:false');
+        setProperties([]);
+      }
     } catch (error) {
-      console.error('Error fetching properties:', error);
+      console.error('Error in fetchProperties:', error);
       if (axios.isAxiosError(error)) {
-        console.error('Error response:', error.response?.data);
+        console.error('Axios error details:', {
+          message: error.message,
+          response: error.response,
+          request: error.request
+        });
       }
       setProperties([]);
     } finally {
+      console.log('Finished fetchProperties, setting loading to false');
       setIsLoading(false);
     }
   };
 
   // Handle search with debounce
   useEffect(() => {
+    console.log('Search term changed, setting up debounce');
     const timer = setTimeout(() => {
+      console.log('Debounce timeout reached, fetching properties');
       fetchProperties(searchTerm);
     }, 500);
     
-    return () => clearTimeout(timer);
+    return () => {
+      console.log('Cleaning up previous debounce timer');
+      clearTimeout(timer);
+    };
   }, [searchTerm]);
 
   // Initial fetch
   useEffect(() => {
+    console.log('useEffect triggered, calling fetchProperties');
     fetchProperties();
-  }, [pagination.page]);
+  }, [pagination.page, pagination.limit]);
 
   const getStatusBadge = (status: string) => {
     const colors = {
@@ -103,7 +128,7 @@ const AdminProperties = () => {
     }
     
     try {
-      await axios.delete(`http://127.0.0.1:3000/api/v1/properties/${propertyId}`);
+      await axios.delete(`${API_BASE_URL}/properties/${propertyId}`);
       fetchProperties(searchTerm, pagination.page);
     } catch (error) {
       console.error('Error deleting property:', error);
@@ -112,7 +137,7 @@ const AdminProperties = () => {
 
   const handleToggleStatus = async (propertyId: string, currentStatus: boolean) => {
     try {
-      await axios.patch(`http://127.0.0.1:3000/api/v1/properties/${propertyId}/status`, {
+      await axios.patch(`${API_BASE_URL}/properties/${propertyId}/status`, {
         active: !currentStatus
       });
       setProperties(properties.map(prop => 
