@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '@/lib/api';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,10 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { Plus, Edit, Trash2, Eye, Search } from 'lucide-react';
 import PropertyForm from '@/components/admin/PropertyForm';
 
-const API_BASE_URL = 'http://127.0.0.1:3000/api/v1';
-
 const AdminProperties = () => {
-  console.log('Component rendering...');
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -30,83 +27,59 @@ const AdminProperties = () => {
   });
 
   // Fetch properties from API
-  const fetchProperties = async (search = '', page = 1) => {
-    console.log('Starting fetchProperties with:', { search, page });
+  const fetchProperties = async (search = '', page = 1, limit = 10) => {
     setIsLoading(true);
     try {
-      console.log('Making API call to:', `${API_BASE_URL}/properties`);
-      const response = await axios.get(`${API_BASE_URL}/properties`, {
-        // params: {
-        //   // search,
-        //   // page,
-        //   // limit: pagination.limit,
-        //   // populate: 'category',
-        //   sort: '-createdAt'
-        // }
+      const response = await api.get('/properties', {
+        params: {
+          sort: '-createdAt',
+          search: search || undefined,
+          page,
+          limit
+        },
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
       });
 
-      console.log('API Response:', response);
-      console.log('Response data:', response.data);
+      if (response.data && response.data.success) {
+        const propertiesData = response.data.data || [];
+        const totalCount = response.data.count || 0;
 
-      if (response.data.success) {
-        const propertiesList = Array.isArray(response.data.data) 
-          ? response.data.data 
-          : [];
-        
-        console.log('Processed properties list:', propertiesList);
-        setProperties(propertiesList);
-        
-        console.log('Updating pagination with:', {
-          page: response.data.currentPage || 1,
-          total: response.data.totalItems || 0,
-          totalPages: response.data.totalPages || 1
+        setProperties(propertiesData);
+        setPagination({
+          page,
+          limit,
+          total: totalCount,
+          totalPages: Math.ceil(totalCount / limit) || 1
         });
-        
-        setPagination(prev => ({
-          ...prev,
-          page: response.data.currentPage || 1,
-          total: response.data.totalItems || 0,
-          totalPages: response.data.totalPages || 1
-        }));
       } else {
-        console.error('API returned success:false');
         setProperties([]);
       }
     } catch (error) {
       console.error('Error in fetchProperties:', error);
-      if (axios.isAxiosError(error)) {
-        console.error('Axios error details:', {
-          message: error.message,
-          response: error.response,
-          request: error.request
-        });
-      }
       setProperties([]);
     } finally {
-      console.log('Finished fetchProperties, setting loading to false');
       setIsLoading(false);
     }
   };
 
   // Handle search with debounce
   useEffect(() => {
-    console.log('Search term changed, setting up debounce');
     const timer = setTimeout(() => {
-      console.log('Debounce timeout reached, fetching properties');
-      fetchProperties(searchTerm);
+      fetchProperties(searchTerm, 1, pagination.limit);
     }, 500);
-    
+
     return () => {
-      console.log('Cleaning up previous debounce timer');
       clearTimeout(timer);
     };
-  }, [searchTerm]);
+  }, [searchTerm, pagination.limit]);
 
   // Initial fetch
   useEffect(() => {
-    console.log('useEffect triggered, calling fetchProperties');
-    fetchProperties();
-  }, [pagination.page, pagination.limit]);
+    fetchProperties('', pagination.page, pagination.limit);
+  }, []);
 
   const getStatusBadge = (status: string) => {
     const colors = {
@@ -123,13 +96,11 @@ const AdminProperties = () => {
   };
 
   const handleDelete = async (propertyId: string) => {
-    if (!window.confirm('Are you sure you want to delete this property?')) {
-      return;
-    }
-    
+    if (!window.confirm('Are you sure you want to delete this property?')) return;
+
     try {
-      await axios.delete(`${API_BASE_URL}/properties/${propertyId}`);
-      fetchProperties(searchTerm, pagination.page);
+      await api.delete(`/properties/${propertyId}`);
+      fetchProperties(searchTerm, pagination.page, pagination.limit);
     } catch (error) {
       console.error('Error deleting property:', error);
     }
@@ -137,10 +108,10 @@ const AdminProperties = () => {
 
   const handleToggleStatus = async (propertyId: string, currentStatus: boolean) => {
     try {
-      await axios.patch(`${API_BASE_URL}/properties/${propertyId}/status`, {
+      await api.patch(`/properties/${propertyId}/status`, {
         active: !currentStatus
       });
-      setProperties(properties.map(prop => 
+      setProperties(properties.map(prop =>
         prop._id === propertyId ? { ...prop, active: !currentStatus } : prop
       ));
     } catch (error) {
@@ -149,7 +120,7 @@ const AdminProperties = () => {
   };
 
   const handlePageChange = (newPage: number) => {
-    setPagination({...pagination, page: newPage});
+    fetchProperties(searchTerm, newPage, pagination.limit);
   };
 
   const renderPropertyRow = (property: any) => (
@@ -171,7 +142,7 @@ const AdminProperties = () => {
         )}
       </TableCell>
       <TableCell className="font-medium">
-        ${property.price?.toLocaleString()}
+        Ksh.{property.price?.toLocaleString()}
       </TableCell>
       <TableCell>
         <Badge className={getStatusBadge(property.status || 'Available')}>
@@ -187,24 +158,24 @@ const AdminProperties = () => {
       <TableCell>{property.views || 0}</TableCell>
       <TableCell>
         <div className="flex items-center space-x-2">
-          <Switch 
+          <Switch
             checked={property.active !== false}
             onCheckedChange={() => handleToggleStatus(property._id, property.active !== false)}
           />
           <Button variant="ghost" size="sm">
             <Eye className="h-4 w-4" />
           </Button>
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => handleEdit(property)}
           >
             <Edit className="h-4 w-4" />
           </Button>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="text-red-600" 
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-red-600"
             onClick={() => handleDelete(property._id)}
           >
             <Trash2 className="h-4 w-4" />
@@ -245,12 +216,14 @@ const AdminProperties = () => {
               <DialogHeader>
                 <DialogTitle>Add New Property</DialogTitle>
               </DialogHeader>
-              <PropertyForm 
-                onClose={() => {
-                  setIsAddDialogOpen(false);
-                  fetchProperties(searchTerm, pagination.page);
-                }} 
-              />
+              <div>
+                <PropertyForm 
+                  onClose={() => {
+                    setIsAddDialogOpen(false);
+                    fetchProperties(searchTerm, pagination.page, pagination.limit);
+                  }} 
+                />
+              </div>
             </DialogContent>
           </Dialog>
         </div>
@@ -350,19 +323,21 @@ const AdminProperties = () => {
           </CardContent>
         </Card>
 
-        {/* Edit Dialog */}
+        {/* Edit Property Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Edit Property</DialogTitle>
             </DialogHeader>
-            <PropertyForm 
-              property={selectedProperty} 
-              onClose={() => {
-                setIsEditDialogOpen(false);
-                fetchProperties(searchTerm, pagination.page);
-              }} 
-            />
+            <div>
+              <PropertyForm 
+                property={selectedProperty}
+                onClose={() => {
+                  setIsEditDialogOpen(false);
+                  fetchProperties(searchTerm, pagination.page, pagination.limit);
+                }}
+              />
+            </div>
           </DialogContent>
         </Dialog>
       </div>
