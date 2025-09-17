@@ -40,6 +40,7 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [formData, setFormData] = useState({
@@ -77,13 +78,25 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
+        const token = localStorage.getItem('token');
+        
         // Fetch amenities
-        const amenitiesRes = await axios.get('http://127.0.0.1:3000/api/v1/amenities?active=true');
+        const amenitiesRes = await axios.get('http://127.0.0.1:3000/api/v1/amenities?active=true', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Cache-Control': 'no-cache'
+          }
+        });
         const flattenedAmenities = Object.values(amenitiesRes.data.data).flat() as Amenity[];
         setAmenities(flattenedAmenities);
 
         // Fetch top-level locations (countries)
-        const countriesRes = await axios.get('http://127.0.0.1:3000/api/v1/locations?level=country');
+        const countriesRes = await axios.get('http://127.0.0.1:3000/api/v1/locations?level=country', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Cache-Control': 'no-cache'
+          }
+        });
         setLocations(prev => ({ ...prev, countries: countriesRes.data.data }));
       } catch (error) {
         console.error('Error fetching initial data:', error);
@@ -92,6 +105,27 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
     };
     fetchInitialData();
   }, [toast]);
+
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get('http://127.0.0.1:3000/api/v1/users/me', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Cache-Control': 'no-cache'
+          }
+        });
+        if (response.data.success && response.data.data) {
+          setCurrentUserId(response.data.data._id);
+        }
+      } catch (error) {
+        console.error('Error fetching current user:', error);
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
 
   const handleLocationChange = async (level: 'country' | 'city' | 'area', parentId: string) => {
     const newLocationState = { ...formData.location };
@@ -106,7 +140,12 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
       nextLocationsState.areas = [];
       nextLocationsState.subareas = [];
       if (parentId) {
-        const citiesRes = await axios.get(`http://127.0.0.1:3000/api/v1/locations?level=city&parent=${parentId}`);
+        const citiesRes = await axios.get(`http://127.0.0.1:3000/api/v1/locations?level=city&parent=${parentId}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Cache-Control': 'no-cache'
+          }
+        });
         nextLocationsState.cities = citiesRes.data.data;
       }
     } else if (level === 'city') {
@@ -116,7 +155,12 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
       nextLocationsState.areas = [];
       nextLocationsState.subareas = [];
       if (parentId) {
-        const areasRes = await axios.get(`http://127.0.0.1:3000/api/v1/locations?level=area&parent=${parentId}`);
+        const areasRes = await axios.get(`http://127.0.0.1:3000/api/v1/locations?level=area&parent=${parentId}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Cache-Control': 'no-cache'
+          }
+        });
         nextLocationsState.areas = areasRes.data.data;
       }
     } else if (level === 'area') {
@@ -124,7 +168,12 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
       newLocationState.subArea = '';
       nextLocationsState.subareas = [];
       if (parentId) {
-        const subareasRes = await axios.get(`http://127.0.0.1:3000/api/v1/locations?level=subarea&parent=${parentId}`);
+        const subareasRes = await axios.get(`http://127.0.0.1:3000/api/v1/locations?level=subarea&parent=${parentId}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Cache-Control': 'no-cache'
+          }
+        });
         nextLocationsState.subareas = subareasRes.data.data;
       }
     }
@@ -179,7 +228,12 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
   const handleRemoveImage = async (index: number) => {
     const imageToRemove = formData.images[index];
     try {
-      await axios.delete(`/api/v1/properties/image/${imageToRemove.public_id}`);
+      await axios.delete(`http://127.0.0.1:3000/api/v1/properties/image/${imageToRemove.public_id}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Cache-Control': 'no-cache'
+        }
+      });
       setFormData(prev => ({
         ...prev,
         images: prev.images.filter((_, i) => i !== index)
@@ -193,6 +247,16 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!currentUserId && !property?._id) {
+      toast({
+        title: 'Error',
+        description: 'You must be logged in to create a property',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -207,6 +271,11 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
       fd.append('video360Url', formData.video360Url);
       fd.append('location', JSON.stringify(formData.location));
       fd.append('category', formData.category);
+      
+      // Add agent_id only when creating a new property
+      if (!property?._id && currentUserId) {
+        fd.append('agent_id', currentUserId);
+      }
 
       formData.contactPhones.forEach(p => fd.append('contactPhones[]', p));
       formData.selectedAmenities.forEach(a => fd.append('selectedAmenities[]', a));
@@ -219,13 +288,13 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
         response = await axios.put(
           `http://127.0.0.1:3000/api/v1/properties/${property._id}`,
           fd,
-          { headers: { 'Content-Type': 'multipart/form-data' } }
+          { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'multipart/form-data' } }
         );
       } else {
         response = await axios.post(
           'http://127.0.0.1:3000/api/v1/properties',
           fd,
-          { headers: { 'Content-Type': 'multipart/form-data' } }
+          { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'multipart/form-data' } }
         );
       }
 
@@ -252,7 +321,12 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
     const fetchCategories = async () => {
       try {
         setIsLoadingCategories(true);
-        const response = await axios.get('http://127.0.0.1:3000/api/v1/categories');
+        const response = await axios.get('http://127.0.0.1:3000/api/v1/categories', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Cache-Control': 'no-cache'
+          }
+        });
         setCategories(Array.isArray(response.data) ? response.data : []);
       } catch (error) {
         console.error('Error fetching categories:', error);
@@ -263,6 +337,12 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
     };
     fetchCategories();
   }, []);
+
+  const getSelectedCategoryName = () => {
+    if (!formData.category) return '';
+    const selectedCategory = categories.find(cat => cat._id === formData.category);
+    return selectedCategory ? `${selectedCategory.name} (${selectedCategory.type})` : '';
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 p-4">
@@ -374,19 +454,26 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
             {isLoadingCategories ? (
               <div>Loading categories...</div>
             ) : (
-              <select
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className="w-full p-2 border rounded-md"
-                required
-              >
-                <option value="">Select a category</option>
-                {categories.map((category) => (
-                  <option key={category._id} value={category._id}>
-                    {category.name} ({category.type})
-                  </option>
-                ))}
-              </select>
+              <div>
+                <select
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  className="w-full p-2 border rounded-md"
+                  required
+                >
+                  <option value="">Select a category</option>
+                  {categories.map((category) => (
+                    <option key={category._id} value={category._id}>
+                      {category.name} ({category.type})
+                    </option>
+                  ))}
+                </select>
+                {formData.category && (
+                  <div className="mt-2 text-sm text-gray-600">
+                    Selected: {getSelectedCategoryName()}
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </CardContent>

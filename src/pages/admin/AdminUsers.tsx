@@ -10,8 +10,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Switch } from '@/components/ui/switch';
 import { Search, UserPlus, Edit, Trash2, Mail } from 'lucide-react';
 import axios from 'axios';
+import { useAuth } from '@/context/AuthContext';
 
 const AdminUsers = () => {
+  const { hasRole } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -110,71 +112,73 @@ const AdminUsers = () => {
             <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
             <p className="text-gray-600 mt-2">Manage users, agents, and administrators</p>
           </div>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-brand-green hover:bg-brand-green/90">
-                <UserPlus className="h-4 w-4 mr-2" />
-                Add User
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New User</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="userName">Full Name</Label>
-                  <Input
-                    id="userName"
-                    value={newUser.name}
-                    onChange={(e) => setNewUser(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="Enter full name"
-                  />
+          {hasRole('admin') && (
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-brand-green hover:bg-brand-green/90">
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Add New User
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add New User</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="userName">Full Name</Label>
+                    <Input
+                      id="userName"
+                      value={newUser.name}
+                      onChange={(e) => setNewUser(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="Enter full name"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="userEmail">Email</Label>
+                    <Input
+                      id="userEmail"
+                      type="email"
+                      value={newUser.email}
+                      onChange={(e) => setNewUser(prev => ({ ...prev, email: e.target.value }))}
+                      placeholder="Enter email address"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="userPassword">Password</Label>
+                    <Input
+                      id="userPassword"
+                      type="password"
+                      value={newUser.password}
+                      onChange={(e) => setNewUser(prev => ({ ...prev, password: e.target.value }))}
+                      placeholder="Enter password"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="userRole">Role</Label>
+                    <select
+                      id="userRole"
+                      className="w-full p-2 border border-gray-300 rounded-lg"
+                      value={newUser.role}
+                      onChange={(e) => setNewUser(prev => ({ ...prev, role: e.target.value }))}
+                    >
+                      <option value="client">Client</option>
+                      <option value="agent">Agent</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </div>
+                  <div className="flex justify-end space-x-2 pt-4">
+                    <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} disabled={isSubmitting}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleAddUser} className="bg-brand-green hover:bg-brand-green/90" disabled={isSubmitting}>
+                      {isSubmitting ? 'Adding...' : 'Add User'}
+                    </Button>
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="userEmail">Email</Label>
-                  <Input
-                    id="userEmail"
-                    type="email"
-                    value={newUser.email}
-                    onChange={(e) => setNewUser(prev => ({ ...prev, email: e.target.value }))}
-                    placeholder="Enter email address"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="userPassword">Password</Label>
-                  <Input
-                    id="userPassword"
-                    type="password"
-                    value={newUser.password}
-                    onChange={(e) => setNewUser(prev => ({ ...prev, password: e.target.value }))}
-                    placeholder="Enter password"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="userRole">Role</Label>
-                  <select
-                    id="userRole"
-                    className="w-full p-2 border border-gray-300 rounded-lg"
-                    value={newUser.role}
-                    onChange={(e) => setNewUser(prev => ({ ...prev, role: e.target.value }))}
-                  >
-                    <option value="client">Client</option>
-                    <option value="agent">Agent</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                </div>
-                <div className="flex justify-end space-x-2 pt-4">
-                  <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} disabled={isSubmitting}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handleAddUser} className="bg-brand-green hover:bg-brand-green/90" disabled={isSubmitting}>
-                    {isSubmitting ? 'Adding...' : 'Add User'}
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
 
         {/* Users Table */}

@@ -14,7 +14,7 @@ import {
   Building
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import { getCurrentUserFromStorage, isAuthenticated, logout as authLogout } from '@/services/authService';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -23,12 +23,14 @@ interface AdminLayoutProps {
 interface UserData {
   name: string;
   role: string;
+  email: string;
 }
 
 const AdminLayout = ({ children }: AdminLayoutProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [user, setUser] = useState<UserData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const navigation = [
     { name: 'Dashboard', href: '/admin', icon: Home },
@@ -40,48 +42,60 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     { name: 'Categories', href: '/admin/categories', icon: Tag },
   ];
 
-  // check if user exist else redirect to login also check role if not admin redirect to /
-  // Fetch logged-in user details
+  // Check authentication and user role
   useEffect(() => {
-    const checkUser = () => {
-      const token = localStorage.getItem('token');
-      if (!token) {
+    const checkAuth = () => {
+      if (!isAuthenticated()) {
         navigate('/signin');
-        return;
+        return false;
       }
-
+      return true;
     };
-    checkUser();
-    const fetchUser = async () => {
+
+    const loadUser = () => {
       try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          navigate('/signin');
-          return;
-        };
+        const currentUser = getCurrentUserFromStorage();
+        if (!currentUser) {
+          throw new Error('No user data found');
+        }
 
-        const res = await axios.get('http://127.0.0.1:3000/api/v1/users/me', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (res.data.data.role !== 'admin') {
+        // Check if user has admin or agent role
+        if (currentUser.role !== 'admin' && currentUser.role !== 'agent') {
+          console.log('User does not have admin/agent role, redirecting to /');
           navigate('/');
           return;
         }
 
-        setUser(res.data.data); // assuming { success, data: { name, role } }
-      } catch (err) {
-        console.error('Failed to fetch user:', err);
+        setUser({
+          name: currentUser.name,
+          email: currentUser.email,
+          role: currentUser.role
+        });
+      } catch (error) {
+        console.error('Failed to load user:', error);
+        navigate('/signin');
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    fetchUser();
-  }, []);
+    if (checkAuth()) {
+      loadUser();
+    }
+  }, [navigate]);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    authLogout();
     navigate('/signin');
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-green"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">

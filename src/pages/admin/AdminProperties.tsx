@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import api from '@/lib/api';
+import axios from 'axios';
+import { useAuth } from '@/context/AuthContext';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +14,7 @@ import { Plus, Edit, Trash2, Eye, Search } from 'lucide-react';
 import PropertyForm from '@/components/admin/PropertyForm';
 
 const AdminProperties = () => {
+  const { hasRole } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -30,14 +32,17 @@ const AdminProperties = () => {
   const fetchProperties = async (search = '', page = 1, limit = 10) => {
     setIsLoading(true);
     try {
-      const response = await api.get('/properties', {
+      const token = localStorage.getItem('token');
+      const response = await axios.get('http://127.0.0.1:3000/api/v1/properties', {
         params: {
           sort: '-createdAt',
           search: search || undefined,
           page,
-          limit
+          limit,
+          populate: 'location.city,location.area,location.subArea'
         },
         headers: {
+          'Authorization': `Bearer ${token}`,
           'Cache-Control': 'no-cache',
           'Pragma': 'no-cache'
         }
@@ -47,7 +52,14 @@ const AdminProperties = () => {
         const propertiesData = response.data.data || [];
         const totalCount = response.data.count || 0;
 
-        setProperties(propertiesData);
+        const processedProperties = propertiesData.map(property => {
+          return {
+            ...property,
+            location: property.location || {}
+          };
+        });
+
+        setProperties(processedProperties);
         setPagination({
           page,
           limit,
@@ -99,7 +111,11 @@ const AdminProperties = () => {
     if (!window.confirm('Are you sure you want to delete this property?')) return;
 
     try {
-      await api.delete(`/properties/${propertyId}`);
+      await axios.delete(`http://127.0.0.1:3000/api/v1/properties/${propertyId}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
       fetchProperties(searchTerm, pagination.page, pagination.limit);
     } catch (error) {
       console.error('Error deleting property:', error);
@@ -108,8 +124,12 @@ const AdminProperties = () => {
 
   const handleToggleStatus = async (propertyId: string, currentStatus: boolean) => {
     try {
-      await api.patch(`/properties/${propertyId}/status`, {
+      await axios.patch(`http://127.0.0.1:3000/api/v1/properties/${propertyId}/status`, {
         active: !currentStatus
+      }, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
       });
       setProperties(properties.map(prop =>
         prop._id === propertyId ? { ...prop, active: !currentStatus } : prop
@@ -123,67 +143,99 @@ const AdminProperties = () => {
     fetchProperties(searchTerm, newPage, pagination.limit);
   };
 
-  const renderPropertyRow = (property: any) => (
-    <TableRow key={property._id}>
-      <TableCell>
-        <div>
-          <p className="font-medium">{property.title}</p>
-          <p className="text-sm text-gray-500">
-            {new Date(property.createdAt).toLocaleDateString()}
-          </p>
-        </div>
-      </TableCell>
-      <TableCell>
-        {property.location?.city && (
-          <span>
-            {property.location.city}
-            {property.location.area && `, ${property.location.area}`}
-          </span>
-        )}
-      </TableCell>
-      <TableCell className="font-medium">
-        Ksh.{property.price?.toLocaleString()}
-      </TableCell>
-      <TableCell>
-        <Badge className={getStatusBadge(property.status || 'Available')}>
-          {property.status || 'Available'}
-        </Badge>
-      </TableCell>
-      <TableCell>
-        {property.category?.name || 'N/A'}
-        {property.category?.type && (
-          <span className="text-xs text-gray-500 block">{property.category.type}</span>
-        )}
-      </TableCell>
-      <TableCell>{property.views || 0}</TableCell>
-      <TableCell>
-        <div className="flex items-center space-x-2">
-          <Switch
-            checked={property.active !== false}
-            onCheckedChange={() => handleToggleStatus(property._id, property.active !== false)}
-          />
-          <Button variant="ghost" size="sm">
-            <Eye className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleEdit(property)}
-          >
-            <Edit className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-red-600"
-            onClick={() => handleDelete(property._id)}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      </TableCell>
-    </TableRow>
-  );
+  const getLocationName = (location: any): string => {
+    if (!location) return 'N/A';
+    
+    if (typeof location === 'string') {
+      return 'Loading...';
+    }
+    
+    if (location.name) return location.name;
+    
+    if (location._id) return `Location (${location._id})`;
+    
+    return 'N/A';
+  };
+
+  const renderPropertyRow = (property: any) => {
+    const isAdmin = hasRole('admin');
+    
+    return (
+      <TableRow key={property._id}>
+        <TableCell>
+          <div>
+            <p className="font-medium">{property.title}</p>
+            <p className="text-sm text-gray-500">
+              {new Date(property.createdAt).toLocaleDateString()}
+            </p>
+          </div>
+        </TableCell>
+        <TableCell>
+          <div className="space-y-1">
+            {property.location?.country && (
+              <div className="text-sm">{getLocationName(property.location.country)}</div>
+            )}
+            {property.location?.city && (
+              <div className="text-sm">{getLocationName(property.location.city)}</div>
+            )}
+            {property.location?.area && (
+              <div className="text-sm text-gray-500">{getLocationName(property.location.area)}</div>
+            )}
+            {property.location?.subArea && (
+              <div className="text-xs text-gray-400">{getLocationName(property.location.subArea)}</div>
+            )}
+          </div>
+        </TableCell>
+        <TableCell className="font-medium">
+          Ksh.{property.price?.toLocaleString()}
+        </TableCell>
+        <TableCell>
+          <Badge className={getStatusBadge(property.status || 'Available')}>
+            {property.status || 'Available'}
+          </Badge>
+        </TableCell>
+        <TableCell>
+          {property.category?.name || 'N/A'}
+          {property.category?.type && (
+            <span className="text-xs text-gray-500 block">{property.category.type}</span>
+          )}
+        </TableCell>
+        <TableCell>{property.views || 0}</TableCell>
+        <TableCell>
+          <div className="flex items-center space-x-2">
+            {isAdmin && (
+              <Switch
+                checked={property.active !== false}
+                onCheckedChange={() => handleToggleStatus(property._id, property.active !== false)}
+              />
+            )}
+            <Button variant="ghost" size="sm">
+              <Eye className="h-4 w-4" />
+            </Button>
+            {isAdmin && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleEdit(property)}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-red-600"
+                  onClick={() => handleDelete(property._id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </>
+            )}
+          </div>
+        </TableCell>
+      </TableRow>
+    );
+  };
 
   if (isLoading && (!properties || properties.length === 0)) {
     return (
@@ -205,27 +257,29 @@ const AdminProperties = () => {
             <h1 className="text-3xl font-bold text-gray-900">Properties Management</h1>
             <p className="text-gray-600 mt-2">Manage your property listings</p>
           </div>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-brand-green hover:bg-brand-green/90">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Property
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Add New Property</DialogTitle>
-              </DialogHeader>
-              <div>
-                <PropertyForm 
-                  onClose={() => {
-                    setIsAddDialogOpen(false);
-                    fetchProperties(searchTerm, pagination.page, pagination.limit);
-                  }} 
-                />
-              </div>
-            </DialogContent>
-          </Dialog>
+          {hasRole('admin') && (
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-brand-green hover:bg-brand-green/90">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Property
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Add New Property</DialogTitle>
+                </DialogHeader>
+                <div>
+                  <PropertyForm 
+                    onClose={() => {
+                      setIsAddDialogOpen(false);
+                      fetchProperties(searchTerm, pagination.page, pagination.limit);
+                    }} 
+                  />
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
 
         {/* Search and Filters */}

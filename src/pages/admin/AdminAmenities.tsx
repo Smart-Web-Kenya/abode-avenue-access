@@ -9,6 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Plus, Edit, Trash2, Wifi, Car, Dumbbell, Shield, Trees, Waves, Home, Zap } from 'lucide-react';
 import axios from 'axios';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/context/AuthContext';
 
 interface Amenity {
   _id: string;
@@ -23,6 +24,7 @@ const iconComponents: { [key: string]: React.ElementType } = {
 };
 
 const AdminAmenities = () => {
+  const { hasRole } = useAuth();
   const [amenities, setAmenities] = useState<Amenity[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -145,41 +147,49 @@ const AdminAmenities = () => {
     <AdminLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Amenities Management</h1>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button><Plus className="h-4 w-4 mr-2" /> Add Amenity</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New Amenity</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="name">Name</Label>
-                  <Input id="name" value={newAmenity.name} onChange={(e) => setNewAmenity({ ...newAmenity, name: e.target.value })} />
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Amenities</h1>
+            <p className="text-gray-600 mt-2">Manage property amenities</p>
+          </div>
+          {hasRole('admin') && (
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-brand-green hover:bg-brand-green/90">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Amenity
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add New Amenity</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="name">Name</Label>
+                    <Input id="name" value={newAmenity.name} onChange={(e) => setNewAmenity({ ...newAmenity, name: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label htmlFor="icon">Icon</Label>
+                    <select id="icon" value={newAmenity.icon} onChange={(e) => setNewAmenity({ ...newAmenity, icon: e.target.value })} className="w-full p-2 border rounded-md">
+                      {iconOptions.map(icon => <option key={icon} value={icon}>{icon}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <Label htmlFor="category">Category</Label>
+                    <select id="category" value={newAmenity.category} onChange={(e) => setNewAmenity({ ...newAmenity, category: e.target.value })} className="w-full p-2 border rounded-md">
+                      <option value="general">General</option>
+                      <option value="safety">Safety</option>
+                      <option value="appliances">Appliances</option>
+                      <option value="outdoor">Outdoor</option>
+                      <option value="pets">Pets</option>
+                      <option value="accessibility">Accessibility</option>
+                    </select>
+                  </div>
+                  <Button onClick={handleAddAmenity}>Add Amenity</Button>
                 </div>
-                <div>
-                  <Label htmlFor="icon">Icon</Label>
-                  <select id="icon" value={newAmenity.icon} onChange={(e) => setNewAmenity({ ...newAmenity, icon: e.target.value })} className="w-full p-2 border rounded-md">
-                    {iconOptions.map(icon => <option key={icon} value={icon}>{icon}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <Label htmlFor="category">Category</Label>
-                  <select id="category" value={newAmenity.category} onChange={(e) => setNewAmenity({ ...newAmenity, category: e.target.value })} className="w-full p-2 border rounded-md">
-                    <option value="general">General</option>
-                    <option value="safety">Safety</option>
-                    <option value="appliances">Appliances</option>
-                    <option value="outdoor">Outdoor</option>
-                    <option value="pets">Pets</option>
-                    <option value="accessibility">Accessibility</option>
-                  </select>
-                </div>
-                <Button onClick={handleAddAmenity}>Add Amenity</Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
 
         <Card>

@@ -1,103 +1,60 @@
-import axios from 'axios';
-import { User } from './userService';
+import api from '@/lib/api';
 
-const API_URL = 'http://localhost:3000/api/v1';
+export interface AuthResponse {
+  token: string;
+  user: User;
+}
 
-// Set auth token in axios headers and localStorage
-export const setAuthToken = (token: string | null): void => {
-  if (token) {
-    // Apply to every request
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    // Save to localStorage
-    localStorage.setItem('token', token);
-  } else {
-    // Delete auth header
-    delete axios.defaults.headers.common['Authorization'];
-    // Remove from localStorage
-    localStorage.removeItem('token');
-  }
-};
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'agent' | 'user';
+  // Add other user properties as needed
+}
 
-// Initialize auth state from localStorage
-export const initializeAuth = (): string | null => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    setAuthToken(token);
-  }
-  return token;
-};
-
-// Login user
-export interface LoginCredentials {
+interface LoginCredentials {
   email: string;
   password: string;
   rememberMe?: boolean;
 }
 
-export interface AuthResponse {
-  success: boolean;
-  token: string;
-  user: User;
-}
-
-export const login = async (credentials: LoginCredentials): Promise<AuthResponse> => {
-  const response = await axios.post<AuthResponse>(`${API_URL}/auth/login`, credentials);
-  const { token, user } = response.data;
-  
-  // Set token in axios headers and localStorage
-  setAuthToken(token);
-  
-  // Store user data in localStorage if rememberMe is true
-  if (credentials.rememberMe) {
-    localStorage.setItem('user', JSON.stringify(user));
-  }
-  
-  return { success: true, token, user };
-};
-
-// Logout user
-export const logout = (): void => {
-  // Remove token from axios headers and localStorage
-  setAuthToken(null);
-  // Remove user data from localStorage
-  localStorage.removeItem('user');
-};
-
-// Register user
-export interface RegisterData {
+interface RegisterData extends LoginCredentials {
   name: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-  role?: 'client' | 'agent';
+  // Add other registration fields as needed
 }
 
-export const register = async (userData: RegisterData): Promise<AuthResponse> => {
-  const response = await axios.post<AuthResponse>(`${API_URL}/auth/register`, userData);
-  const { token, user } = response.data;
-  
-  // Set token in axios headers and localStorage
-  setAuthToken(token);
-  
-  return { success: true, token, user };
+// Set auth token in localStorage and axios defaults
+export const setAuthToken = (token: string | null): void => {
+  if (token) {
+    localStorage.setItem('token', token);
+  } else {
+    localStorage.removeItem('token');
+  }
 };
 
-// Verify email
-export const verifyEmail = async (token: string): Promise<{ success: boolean; message: string }> => {
-  const response = await axios.get(`${API_URL}/auth/verify-email/${token}`);
-  return response.data;
-};
-
-// Resend verification email
-export const resendVerificationEmail = async (email: string): Promise<{ success: boolean; message: string }> => {
-  const response = await axios.post(`${API_URL}/auth/resend-verification-email`, { email });
-  return response.data;
+// Store user data in localStorage
+export const setUser = (user: User | null): void => {
+  if (user) {
+    localStorage.setItem('user', JSON.stringify(user));
+  } else {
+    localStorage.removeItem('user');
+  }
 };
 
 // Get current user from localStorage
 export const getCurrentUserFromStorage = (): User | null => {
+  if (typeof window === 'undefined') return null;
+  
   const userStr = localStorage.getItem('user');
-  return userStr ? JSON.parse(userStr) : null;
+  if (!userStr) return null;
+  
+  try {
+    return JSON.parse(userStr);
+  } catch (error) {
+    console.error('Error parsing user data:', error);
+    return null;
+  }
 };
 
 // Check if user is authenticated
@@ -105,9 +62,73 @@ export const isAuthenticated = (): boolean => {
   return !!localStorage.getItem('token');
 };
 
-// Check if user has required role
-export const hasRole = (roles: string | string[]): boolean => {
-  const user = getCurrentUserFromStorage();
+// Login user
+export const login = async (credentials: LoginCredentials): Promise<AuthResponse> => {
+  try {
+    const response = await api.post<AuthResponse>('users/login', {
+      email: credentials.email,
+      password: credentials.password,
+    });
+
+    const { token, user } = response.data;
+    
+    // Set token and user data
+    setAuthToken(token);
+    setUser(user);
+    
+    return { token, user };
+  } catch (error) {
+    console.error('Login error:', error);
+    throw error;
+  }
+};
+
+// Register new user
+export const register = async (userData: RegisterData): Promise<AuthResponse> => {
+  try {
+    const response = await api.post<AuthResponse>('users/register', userData);
+    
+    const { token, user } = response.data;
+    
+    // Set token and user data
+    setAuthToken(token);
+    setUser(user);
+    
+    return { token, user };
+  } catch (error) {
+    console.error('Registration error:', error);
+    throw error;
+  }
+};
+
+// Logout user
+export const logout = (): void => {
+  // Clear all auth data
+  setAuthToken(null);
+  setUser(null);
+  
+  // Clear any other stored data if needed
+  // localStorage.clear(); // Be careful with this as it clears everything
+};
+
+// Get current user (makes an API call)
+export const getCurrentUser = async (): Promise<User> => {
+  try {
+    const response = await api.get<User>('/users/me');
+    const user = response.data;
+    
+    // Update user data in localStorage
+    setUser(user);
+    
+    return user;
+  } catch (error) {
+    console.error('Error fetching current user:', error);
+    throw error;
+  }
+};
+
+// Check if user has specific role(s)
+export const hasRole = (user: User | null, roles: string | string[]): boolean => {
   if (!user) return false;
   
   if (Array.isArray(roles)) {
@@ -115,4 +136,19 @@ export const hasRole = (roles: string | string[]): boolean => {
   }
   
   return user.role === roles;
+};
+
+// Check if user is admin
+export const isAdmin = (user: User | null): boolean => {
+  return hasRole(user, 'admin');
+};
+
+// Check if user is agent
+export const isAgent = (user: User | null): boolean => {
+  return hasRole(user, 'agent');
+};
+
+// Check if user is admin or agent
+export const isAdminOrAgent = (user: User | null): boolean => {
+  return hasRole(user, ['admin', 'agent']);
 };

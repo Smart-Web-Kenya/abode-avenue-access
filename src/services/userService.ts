@@ -1,6 +1,7 @@
-import axios from 'axios';
+import api from '@/lib/api';
 
-const API_URL = 'http://localhost:3000/api/v1';
+// Remove the leading slash since the base URL already includes /api
+const API_URL = 'v1';
 
 export interface User {
   _id: string;
@@ -26,13 +27,13 @@ export const getUsers = async (params?: {
   status?: string;
   search?: string;
 }): Promise<{ success: boolean; data: User[] }> => {
-  const response = await axios.get(`${API_URL}/users`, { params });
+  const response = await api.get(`${API_URL}/users`, { params });
   return response.data;
 };
 
 // Get single user
 export const getUser = async (id: string): Promise<{ success: boolean; data: User }> => {
-  const response = await axios.get(`${API_URL}/users/${id}`);
+  const response = await api.get(`${API_URL}/users/${id}`);
   return response.data;
 };
 
@@ -44,7 +45,7 @@ export const createUser = async (userData: {
   role: string;
   status?: string;
 }): Promise<{ success: boolean; data: User }> => {
-  const response = await axios.post(`${API_URL}/users`, userData);
+  const response = await api.post(`${API_URL}/users`, userData);
   return response.data;
 };
 
@@ -61,25 +62,25 @@ export const updateUser = async (
     bio: string;
   }>
 ): Promise<{ success: boolean; data: User }> => {
-  const response = await axios.put(`${API_URL}/users/${id}`, userData);
+  const response = await api.put(`${API_URL}/users/${id}`, userData);
   return response.data;
 };
 
 // Delete user
 export const deleteUser = async (id: string): Promise<{ success: boolean; data: {} }> => {
-  const response = await axios.delete(`${API_URL}/users/${id}`);
+  const response = await api.delete(`${API_URL}/users/${id}`);
   return response.data;
 };
 
 // Toggle user status
 export const toggleUserStatus = async (id: string): Promise<{ success: boolean; data: User }> => {
-  const response = await axios.patch(`${API_URL}/users/${id}/status`);
+  const response = await api.patch(`${API_URL}/users/${id}/status`);
   return response.data;
 };
 
 // Get current user
 export const getCurrentUser = async (): Promise<{ success: boolean; data: User }> => {
-  const response = await axios.get(`${API_URL}/users/me`);
+  const response = await api.get(`${API_URL}/users/me`);
   return response.data;
 };
 
@@ -101,7 +102,7 @@ export const updateProfile = async (
   if (userData.bio) formData.append('bio', userData.bio);
   if (userData.avatar) formData.append('avatar', userData.avatar);
   
-  const response = await axios.put(`${API_URL}/users/me`, formData, {
+  const response = await api.put(`${API_URL}/users/me`, formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
@@ -116,13 +117,13 @@ export const changePassword = async (data: {
   newPassword: string;
   confirmPassword: string;
 }): Promise<{ success: boolean; message: string }> => {
-  const response = await axios.put(`${API_URL}/users/change-password`, data);
+  const response = await api.put(`${API_URL}/users/change-password`, data);
   return response.data;
 };
 
 // Forgot password
 export const forgotPassword = async (email: string): Promise<{ success: boolean; message: string }> => {
-  const response = await axios.post(`${API_URL}/auth/forgot-password`, { email });
+  const response = await api.post(`${API_URL}/auth/forgot-password`, { email });
   return response.data;
 };
 
@@ -132,7 +133,7 @@ export const resetPassword = async (
   password: string,
   confirmPassword: string
 ): Promise<{ success: boolean; message: string }> => {
-  const response = await axios.put(`${API_URL}/auth/reset-password/${token}`, {
+  const response = await api.put(`${API_URL}/auth/reset-password/${token}`, {
     password,
     confirmPassword,
   });

@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import axios from 'axios';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/context/AuthContext';
 
 interface Location {
   _id: string;
@@ -21,6 +22,7 @@ interface Location {
 }
 
 const AdminLocations = () => {
+  const { hasRole } = useAuth();
   const [locations, setLocations] = useState<Location[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -127,39 +129,41 @@ const AdminLocations = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Locations Management</h1>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button><Plus className="h-4 w-4 mr-2" /> Add Location</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New Location</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="name">Name</Label>
-                  <Input id="name" value={newLocation.name} onChange={(e) => setNewLocation({ ...newLocation, name: e.target.value })} />
+          {hasRole('admin') && (
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button><Plus className="h-4 w-4 mr-2" /> Add Location</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add New Location</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="name">Name</Label>
+                    <Input id="name" value={newLocation.name} onChange={(e) => setNewLocation({ ...newLocation, name: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label htmlFor="level">Level</Label>
+                    <select id="level" value={newLocation.level} onChange={(e) => setNewLocation({ ...newLocation, level: e.target.value as any })} className="w-full p-2 border rounded-md">
+                      <option value="country">Country</option>
+                      <option value="city">City</option>
+                      <option value="area">Area</option>
+                      <option value="subarea">Subarea</option>
+                    </select>
+                  </div>
+                  <div>
+                    <Label htmlFor="parent">Parent Location</Label>
+                    <select id="parent" value={newLocation.parent} onChange={(e) => setNewLocation({ ...newLocation, parent: e.target.value })} className="w-full p-2 border rounded-md">
+                      <option value="">None (Top Level)</option>
+                      {locations.map(loc => <option key={loc._id} value={loc._id}>{loc.name} ({loc.level})</option>)}
+                    </select>
+                  </div>
+                  <Button onClick={handleAddLocation}>Add Location</Button>
                 </div>
-                <div>
-                  <Label htmlFor="level">Level</Label>
-                  <select id="level" value={newLocation.level} onChange={(e) => setNewLocation({ ...newLocation, level: e.target.value as any })} className="w-full p-2 border rounded-md">
-                    <option value="country">Country</option>
-                    <option value="city">City</option>
-                    <option value="area">Area</option>
-                    <option value="subarea">Subarea</option>
-                  </select>
-                </div>
-                <div>
-                  <Label htmlFor="parent">Parent Location</Label>
-                  <select id="parent" value={newLocation.parent} onChange={(e) => setNewLocation({ ...newLocation, parent: e.target.value })} className="w-full p-2 border rounded-md">
-                    <option value="">None (Top Level)</option>
-                    {locations.map(loc => <option key={loc._id} value={loc._id}>{loc.name} ({loc.level})</option>)}
-                  </select>
-                </div>
-                <Button onClick={handleAddLocation}>Add Location</Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
 
         {/* Stats */}

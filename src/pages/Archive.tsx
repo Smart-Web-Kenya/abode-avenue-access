@@ -252,11 +252,11 @@ const Archive = () => {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-xl font-bold text-blue-600">
-                        ${property.price.toLocaleString()}
+                        Ksh.{property.price.toLocaleString()}
                       </span>
                       <Button 
                         size="sm" 
-                        className="bg-blue-600 hover:bg-blue-700"
+                        className="bg-brand-green hover:bg-brand-green/90 text-white"
                       >
                         View Details
                       </Button>
@@ -271,7 +271,7 @@ const Archive = () => {
           <div className="flex justify-center mt-12">
             <div className="flex items-center space-x-2">
               <Button variant="outline" disabled>Previous</Button>
-              <Button className="bg-blue-600 text-white">1</Button>
+              <Button className="bg-brand-green hover:bg-brand-green/90 text-white">1</Button>
               <Button variant="outline">2</Button>
               <Button variant="outline">3</Button>
               <Button variant="outline">Next</Button>
