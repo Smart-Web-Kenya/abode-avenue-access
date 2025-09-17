@@ -1,6 +1,6 @@
-
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,15 +13,36 @@ const SignIn = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    setError('');
+
+    try {
+      const response = await axios.post('http://127.0.0.1:3000/api/v1/users/login', { email, password });
+      
+      // Store token and user data
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+
+      // Redirect based on role
+      const { role } = response.data.user;
+      if (role === 'admin') {
+        navigate('/admin');
+      } else if (role === 'agent') {
+        navigate('/'); // Agents are redirected to the homepage for now
+      } else { // Clients and any other roles
+        navigate('/');
+      }
+
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'An unexpected error occurred. Please try again.');
+    } finally {
       setIsLoading(false);
-      console.log('Sign in attempt:', { email, password });
-    }, 1000);
+    }
   };
 
   return (
@@ -92,6 +113,12 @@ const SignIn = () => {
                   </button>
                 </div>
               </div>
+
+              {error && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                  <span className="block sm:inline">{error}</span>
+                </div>
+              )}
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center">

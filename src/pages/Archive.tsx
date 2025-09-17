@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,34 @@ import { Badge } from '@/components/ui/badge';
 import { Search, MapPin, Bath, Bed, Square, Filter } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import axios from 'axios';
+
+interface ApiPropertyImage {
+  _id: string;
+  mimetype: string;
+  isFeatured?: boolean;
+}
+
+interface ApiLocation {
+  country?: string;
+  city?: string;
+  area?: string;
+  subArea?: string;
+}
+
+interface ApiProperty {
+  _id: string;
+  title: string;
+  price: number;
+  location?: ApiLocation;
+  bedrooms: number;
+  bathrooms: number;
+  sqft: number;
+  images: ApiPropertyImage[];
+  category?: { name: string; type: string } | string;
+  status?: string;
+  active?: boolean;
+}
 
 const Archive = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -15,80 +43,58 @@ const Archive = () => {
   const [propertyType, setPropertyType] = useState('');
   const [bedrooms, setBedrooms] = useState('');
 
-  const properties = [
-    {
-      id: 1,
-      title: "Modern Downtown Loft",
-      price: 450000,
-      location: "Downtown District",
-      bedrooms: 2,
-      bathrooms: 2,
-      sqft: 1200,
-      type: "Apartment",
-      featured: true,
-      image: "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=800&h=600&fit=crop"
-    },
-    {
-      id: 2,
-      title: "Luxury Family Home",
-      price: 750000,
-      location: "Suburban Hills",
-      bedrooms: 4,
-      bathrooms: 3,
-      sqft: 2400,
-      type: "House",
-      featured: true,
-      image: "https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=800&h=600&fit=crop"
-    },
-    {
-      id: 3,
-      title: "Cozy Studio Apartment",
-      price: 225000,
-      location: "Arts Quarter",
-      bedrooms: 1,
-      bathrooms: 1,
-      sqft: 650,
-      type: "Studio",
-      featured: false,
-      image: "https://images.unsplash.com/photo-1483058712412-4245e9b90334?w=800&h=600&fit=crop"
-    },
-    {
-      id: 4,
-      title: "Spacious Townhouse",
-      price: 525000,
-      location: "Riverside",
-      bedrooms: 3,
-      bathrooms: 2,
-      sqft: 1800,
-      type: "Townhouse",
-      featured: false,
-      image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=600&fit=crop"
-    },
-    {
-      id: 5,
-      title: "Executive Penthouse",
-      price: 1200000,
-      location: "City Center",
-      bedrooms: 3,
-      bathrooms: 3,
-      sqft: 2200,
-      type: "Penthouse",
-      featured: true,
-      image: "https://images.unsplash.com/photo-1472396961693-142e6e269027?w=800&h=600&fit=crop"
-    },
-    {
-      id: 6,
-      title: "Garden View Condo",
-      price: 375000,
-      location: "Green Valley",
-      bedrooms: 2,
-      bathrooms: 2,
-      sqft: 1100,
-      type: "Condo",
-      featured: false,
-      image: "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=800&h=600&fit=crop"
+  const [properties, setProperties] = useState<ApiProperty[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchAll = async () => {
+      try {
+        setIsLoading(true);
+        const res = await axios.get('http://127.0.0.1:3000/api/v1/properties');
+        setProperties(Array.isArray(res.data?.data) ? res.data.data : []);
+      } catch (err) {
+        console.error('Failed to load properties', err);
+        setProperties([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchAll();
+  }, []);
+
+  const imageUrl = (p: ApiProperty) => {
+    if (!p.images || p.images.length === 0) return 'https://images.unsplash.com/photo-1483058712412-4245e9b90334?w=800&h=600&fit=crop';
+    const img = p.images.find(i => i.isFeatured) || p.images[0];
+    return `http://127.0.0.1:3000/api/v1/properties/${p._id}/image/${img._id}`;
+  };
+
+  // Basic client-side filtering (optional)
+  const filtered = properties.filter(p => {
+    const matchesSearch = !searchQuery ||
+      p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (p.location?.city || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (p.location?.area || '').toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesBeds = !bedrooms || p.bedrooms >= parseInt(bedrooms, 10);
+
+    // Simple price-range parser like "300000-600000" or "1000000+"
+    let matchesPrice = true;
+    if (priceRange) {
+      if (priceRange.endsWith('+')) {
+        const min = parseInt(priceRange.replace('+', ''), 10);
+        matchesPrice = p.price >= min;
+      } else {
+        const [minS, maxS] = priceRange.split('-');
+        const min = parseInt(minS, 10);
+        const max = parseInt(maxS, 10);
+        matchesPrice = p.price >= min && p.price <= max;
+      }
     }
-  ];
+
+    const matchesType = !propertyType || (typeof p.category === 'object' && p.category?.type?.toLowerCase() === propertyType.toLowerCase());
+
+    return matchesSearch && matchesBeds && matchesPrice && matchesType;
+  });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -160,7 +166,7 @@ const Archive = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold text-gray-900">
-              {properties.length} Properties Found
+              {isLoading ? 'Loading properties...' : `${filtered.length} Properties Found`}
             </h1>
             <Select defaultValue="newest">
               <SelectTrigger className="w-48">
@@ -176,34 +182,48 @@ const Archive = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {properties.map((property) => (
-              <Link key={property.id} to={`/listing/${property.id}`} className="block">
+            {isLoading && (
+              <>
+                {[...Array(6)].map((_, i) => (
+                  <div key={`sk-${i}`} className="overflow-hidden rounded-md border bg-white">
+                    <div className="h-48 w-full bg-gray-200 animate-pulse" />
+                    <div className="p-4 space-y-3">
+                      <div className="h-5 w-3/4 bg-gray-200 animate-pulse rounded" />
+                      <div className="flex items-center gap-2">
+                        <div className="h-4 w-4 bg-gray-200 animate-pulse rounded" />
+                        <div className="h-4 w-32 bg-gray-200 animate-pulse rounded" />
+                      </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="h-4 bg-gray-200 animate-pulse rounded" />
+                        <div className="h-4 bg-gray-200 animate-pulse rounded" />
+                        <div className="h-4 bg-gray-200 animate-pulse rounded" />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="h-6 w-24 bg-gray-200 animate-pulse rounded" />
+                        <div className="h-9 w-24 bg-gray-200 animate-pulse rounded" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+            {!isLoading && filtered.map((property) => (
+              <Link key={property._id} to={`/listing/${property._id}`} className="block">
                 <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group h-full">
                   <div className="relative overflow-hidden">
                     <img
-                      src={property.image}
+                      src={imageUrl(property)}
                       alt={property.title}
                       className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                     <div className="absolute top-4 left-4 flex gap-2">
-                      {property.featured && (
-                        <Badge className="bg-blue-600 text-white">Featured</Badge>
+                      {/* Optionally display status/category */}
+                      {property.status && (
+                        <Badge className="bg-blue-600 text-white">{property.status}</Badge>
                       )}
-                      <Badge variant="secondary">{property.type}</Badge>
-                    </div>
-                    <div className="absolute top-4 right-4">
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
-                        className="bg-white/80 hover:bg-white"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          // Handle favorite functionality here
-                        }}
-                      >
-                        ♡
-                      </Button>
+                      {typeof property.category === 'object' && property.category?.name && (
+                        <Badge variant="secondary">{property.category.name}</Badge>
+                      )}
                     </div>
                   </div>
                   <CardContent className="p-4">
@@ -212,7 +232,9 @@ const Archive = () => {
                     </h3>
                     <div className="flex items-center text-gray-600 mb-3">
                       <MapPin className="h-4 w-4 mr-1" />
-                      <span className="text-sm">{property.location}</span>
+                      <span className="text-sm">
+                        {property.location?.area || property.location?.city || property.location?.country || '—'}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between mb-3 text-sm text-gray-600">
                       <div className="flex items-center">
@@ -235,10 +257,6 @@ const Archive = () => {
                       <Button 
                         size="sm" 
                         className="bg-blue-600 hover:bg-blue-700"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                        }}
                       >
                         View Details
                       </Button>
@@ -249,7 +267,7 @@ const Archive = () => {
             ))}
           </div>
           
-          {/* Pagination */}
+          {/* Pagination (placeholder) */}
           <div className="flex justify-center mt-12">
             <div className="flex items-center space-x-2">
               <Button variant="outline" disabled>Previous</Button>

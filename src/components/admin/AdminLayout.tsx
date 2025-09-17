@@ -1,5 +1,4 @@
-
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -14,13 +13,22 @@ import {
   Tag,
   Building
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import axios from 'axios';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
+interface UserData {
+  name: string;
+  role: string;
+}
+
 const AdminLayout = ({ children }: AdminLayoutProps) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [user, setUser] = useState<UserData | null>(null);
 
   const navigation = [
     { name: 'Dashboard', href: '/admin', icon: Home },
@@ -31,6 +39,49 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     { name: 'Locations', href: '/admin/locations', icon: MapPin },
     { name: 'Categories', href: '/admin/categories', icon: Tag },
   ];
+
+  // check if user exist else redirect to login also check role if not admin redirect to /
+  // Fetch logged-in user details
+  useEffect(() => {
+    const checkUser = () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/signin');
+        return;
+      }
+
+    };
+    checkUser();
+    const fetchUser = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          navigate('/signin');
+          return;
+        };
+
+        const res = await axios.get('http://127.0.0.1:3000/api/v1/users/me', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (res.data.data.role !== 'admin') {
+          navigate('/');
+          return;
+        }
+
+        setUser(res.data.data); // assuming { success, data: { name, role } }
+      } catch (err) {
+        console.error('Failed to fetch user:', err);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    navigate('/signin');
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -63,9 +114,32 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                   3
                 </span>
               </Button>
-              <Button variant="ghost" size="icon">
-                <User className="h-5 w-5" />
-              </Button>
+
+              {/* User info & logout */}
+              {user ? (
+                <div className="flex items-center space-x-3">
+                  <User className="h-5 w-5 text-brand-green" />
+                  <span className="font-medium text-gray-700">
+                    {user.name} ({user.role})
+                  </span>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="border-brand-green text-brand-green hover:bg-brand-green hover:text-white"
+                    onClick={handleLogout}
+                  >
+                    Logout
+                  </Button>
+                </div>
+              ) : (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => navigate('/signin')}
+                >
+                  Login
+                </Button>
+              )}
             </div>
           </div>
         </div>

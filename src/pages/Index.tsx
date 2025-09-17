@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -13,10 +12,30 @@ import PartnersAwards from '@/components/PartnersAwards';
 import FAQ from '@/components/FAQ';
 import AboutUs from '@/components/AboutUs';
 import Footer from '@/components/Footer';
+import axios from 'axios';
+
+interface ApiPropertyImage {
+  _id: string;
+  mimetype: string;
+  isFeatured?: boolean;
+}
+
+interface ApiProperty {
+  _id: string;
+  title: string;
+  price: number;
+  location?: { city?: string; area?: string; country?: string };
+  bedrooms: number;
+  bathrooms: number;
+  sqft: number;
+  images: ApiPropertyImage[];
+}
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [featured, setFeatured] = useState<ApiProperty[]>([]);
+  const [isLoadingFeatured, setIsLoadingFeatured] = useState(false);
 
   const heroImages = [
     "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=1200&h=800&fit=crop",
@@ -34,38 +53,28 @@ const Index = () => {
     return () => clearInterval(interval);
   }, [heroImages.length]);
 
-  const featuredProperties = [
-    {
-      id: 1,
-      title: "Modern Downtown Loft",
-      price: 450000,
-      location: "Downtown District",
-      bedrooms: 2,
-      bathrooms: 2,
-      sqft: 1200,
-      image: "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=800&h=600&fit=crop"
-    },
-    {
-      id: 2,
-      title: "Luxury Family Home",
-      price: 750000,
-      location: "Suburban Hills",
-      bedrooms: 4,
-      bathrooms: 3,
-      sqft: 2400,
-      image: "https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=800&h=600&fit=crop"
-    },
-    {
-      id: 3,
-      title: "Cozy Studio Apartment",
-      price: 225000,
-      location: "Arts Quarter",
-      bedrooms: 1,
-      bathrooms: 1,
-      sqft: 650,
-      image: "https://images.unsplash.com/photo-1483058712412-4245e9b90334?w=800&h=600&fit=crop"
-    }
-  ];
+  // Fetch latest 3 featured properties
+  useEffect(() => {
+    const fetchFeatured = async () => {
+      try {
+        setIsLoadingFeatured(true);
+        const res = await axios.get('http://127.0.0.1:3000/api/v1/properties/featured');
+        setFeatured(Array.isArray(res.data?.data) ? res.data.data : []);
+      } catch (err) {
+        console.error('Failed to load featured properties', err);
+        setFeatured([]);
+      } finally {
+        setIsLoadingFeatured(false);
+      }
+    };
+    fetchFeatured();
+  }, []);
+
+  const featuredImageUrl = (p: ApiProperty) => {
+    if (!p.images || p.images.length === 0) return 'https://images.unsplash.com/photo-1483058712412-4245e9b90334?w=800&h=600&fit=crop';
+    const img = p.images.find(i => i.isFeatured) || p.images[0];
+    return `http://127.0.0.1:3000/api/v1/properties/${p._id}/image/${img._id}`;
+  };
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % heroImages.length);
@@ -190,12 +199,40 @@ const Index = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredProperties.map((property) => (
-              <Link key={property.id} to={`/listing/${property.id}`} className="block">
+            {isLoadingFeatured && (
+              <>
+                {[...Array(3)].map((_, i) => (
+                  <div key={`sk-${i}`} className="overflow-hidden rounded-md border bg-white">
+                    <div className="h-64 w-full bg-gray-200 animate-pulse" />
+                    <div className="p-6 space-y-4">
+                      <div className="h-5 w-3/4 bg-gray-200 animate-pulse rounded" />
+                      <div className="flex items-center gap-2">
+                        <div className="h-4 w-4 bg-gray-200 animate-pulse rounded" />
+                        <div className="h-4 w-32 bg-gray-200 animate-pulse rounded" />
+                      </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="h-4 bg-gray-200 animate-pulse rounded" />
+                        <div className="h-4 bg-gray-200 animate-pulse rounded" />
+                        <div className="h-4 bg-gray-200 animate-pulse rounded" />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="h-6 w-24 bg-gray-200 animate-pulse rounded" />
+                        <div className="h-9 w-28 bg-gray-200 animate-pulse rounded" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+            {!isLoadingFeatured && featured.length === 0 && (
+              <div className="col-span-3 text-center text-gray-600">No properties available yet.</div>
+            )}
+            {!isLoadingFeatured && featured.map((property) => (
+              <Link key={property._id} to={`/listing/${property._id}`} className="block">
                 <Card className="overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer">
                   <div className="relative">
                     <img
-                      src={property.image}
+                      src={featuredImageUrl(property)}
                       alt={property.title}
                       className="w-full h-64 object-cover hover:scale-105 transition-transform duration-300"
                     />
@@ -207,7 +244,9 @@ const Index = () => {
                     <h3 className="text-xl font-semibold mb-2 text-gray-900">{property.title}</h3>
                     <div className="flex items-center text-gray-600 mb-3">
                       <MapPin className="h-4 w-4 mr-1" />
-                      <span className="text-sm">{property.location}</span>
+                      <span className="text-sm">
+                        {property.location?.area || property.location?.city || property.location?.country || '—'}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between mb-4 text-sm text-gray-600">
                       <div className="flex items-center">
@@ -227,7 +266,7 @@ const Index = () => {
                       <span className="text-2xl font-bold text-brand-green">
                         ${property.price.toLocaleString()}
                       </span>
-                      <Button variant="outline" size="sm" onClick={(e) => e.stopPropagation()}>
+                      <Button variant="outline" size="sm">
                         View Details
                       </Button>
                     </div>

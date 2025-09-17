@@ -99,14 +99,7 @@ const SingleListing = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="aspect-video">
-                    <iframe
-                      src={property.videoUrl}
-                      title="Property Video Tour"
-                      className="w-full h-full rounded-lg"
-                      frameBorder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    ></iframe>
+                    <iframe allow="autoplay; fullscreen; web-share; xr-spatial-tracking" allowFullScreen className="MatterportModelEmbed_Iframe_Zxdk MatterportModelEmbed_FillParent_LaA7g MatterportModelEmbed_FullWidth_SocxN" height="480" width="853" loading="lazy" src="https://my.matterport.com/show/?m=jm5WwEA3HUN&amp;log=0&amp;help=0&amp;nt=0&amp;play=1&amp;qs=0&amp;brand=1&amp;dh=1&amp;tour=1&amp;gt=1&amp;hr=1&amp;mls=0&amp;mt=1&amp;tagNav=1&amp;pin=1&amp;portal=1&amp;f=1&amp;fp=1&amp;nozoom=0&amp;search=1&amp;wh=0&amp;kb=1&amp;lp=0&amp;title=1&amp;tourcta=1&amp;vr=1&amp;title=0" title="Matterport Embed"></iframe>
                   </div>
                 </CardContent>
               </Card>
