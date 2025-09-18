@@ -1,4 +1,4 @@
-
+import React, { useState } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -68,19 +68,15 @@ const AdminReports = () => {
     }
   ];
 
-  const topPerformers = [
-    { name: 'Mike Wilson', sales: 15, revenue: 3200000 },
-    { name: 'Jane Smith', sales: 12, revenue: 2800000 },
-    { name: 'John Doe', sales: 10, revenue: 2100000 }
-  ];
+  // Pagination logic
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 3;
+  const totalPages = Math.ceil(recentSales.length / rowsPerPage);
 
-  const propertyViews = [
-    { property: 'Luxury Villa Runda', views: 1245, inquiries: 23, conversion: '1.8%' },
-    { property: 'Modern Apartment CBD', views: 987, inquiries: 18, conversion: '1.8%' },
-    { property: 'Family Home Karen', views: 856, inquiries: 15, conversion: '1.8%' },
-    { property: 'Studio Westlands', views: 743, inquiries: 12, conversion: '1.6%' },
-    { property: 'Townhouse Lavington', views: 632, inquiries: 9, conversion: '1.4%' }
-  ];
+  const paginatedSales = recentSales.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
+  );
 
   return (
     <AdminLayout>
@@ -181,7 +177,7 @@ const AdminReports = () => {
           </Card>
         </div>
 
-        {/* Recent Sales Table */}
+        {/* Recent Sales Table with Pagination */}
         <Card>
           <CardHeader>
             <CardTitle>Recent Sales Report</CardTitle>
@@ -200,7 +196,7 @@ const AdminReports = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {recentSales.map((sale) => (
+                {paginatedSales.map((sale) => (
                   <TableRow key={sale.id}>
                     <TableCell className="font-medium">{sale.property}</TableCell>
                     <TableCell>{sale.location}</TableCell>
@@ -213,74 +209,30 @@ const AdminReports = () => {
                 ))}
               </TableBody>
             </Table>
+            {/* Pagination Controls */}
+            <div className="flex justify-end items-center mt-4 space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((prev) => prev - 1)}
+              >
+                Previous
+              </Button>
+              <span className="text-sm">
+                Page {currentPage} of {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((prev) => prev + 1)}
+              >
+                Next
+              </Button>
+            </div>
           </CardContent>
         </Card>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Top Performers */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Top Performing Agents</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Rank</TableHead>
-                    <TableHead>Agent</TableHead>
-                    <TableHead>Sales</TableHead>
-                    <TableHead>Revenue</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {topPerformers.map((performer, index) => (
-                    <TableRow key={performer.name}>
-                      <TableCell>
-                        <Badge className="bg-brand-green/10 text-brand-green">
-                          #{index + 1}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="font-medium">{performer.name}</TableCell>
-                      <TableCell>{performer.sales}</TableCell>
-                      <TableCell className="font-bold">${performer.revenue.toLocaleString()}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-
-          {/* Property Views Report */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Property Views & Conversions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Property</TableHead>
-                    <TableHead>Views</TableHead>
-                    <TableHead>Inquiries</TableHead>
-                    <TableHead>Conversion</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {propertyViews.map((property, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="font-medium">{property.property}</TableCell>
-                      <TableCell>{property.views.toLocaleString()}</TableCell>
-                      <TableCell>{property.inquiries}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{property.conversion}</Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </AdminLayout>
   );

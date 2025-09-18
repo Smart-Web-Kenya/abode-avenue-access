@@ -23,6 +23,10 @@ import AdminLocations from "./pages/admin/AdminLocations";
 import AdminCategories from "./pages/admin/AdminCategories";
 import BookingConfirmation from "./pages/BookingConfirmation";
 import MyBookings from "./pages/MyBookings";
+import SalesReport from "./pages/admin/reports/SalesReport";
+import AgentsReport from "./pages/admin/reports/AgentsReport";
+import ViewsReport from "./pages/admin/reports/ViewsReport";
+
 
 // Protected route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -103,6 +107,21 @@ const App = () => (
               <ProtectedRoute>
                 <AdminRoute>
                   <AdminReports />
+                </AdminRoute>
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/reports/sales" element={<Navigate to="/admin/reports" replace />} />
+            <Route path="/admin/reports/agents" element={
+              <ProtectedRoute>
+                <AdminRoute>
+                  <AgentsReport />
+                </AdminRoute>
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/reports/views" element={
+              <ProtectedRoute>
+                <AdminRoute>
+                  <ViewsReport />
                 </AdminRoute>
               </ProtectedRoute>
             } />

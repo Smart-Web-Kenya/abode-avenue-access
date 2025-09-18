@@ -36,7 +36,16 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     { name: 'Dashboard', href: '/admin', icon: Home },
     { name: 'Properties', href: '/admin/properties', icon: Building },
     { name: 'Users', href: '/admin/users', icon: Users },
-    { name: 'Reports', href: '/admin/reports', icon: FileText },
+    {
+      name: 'Reports',
+      href: '/admin/reports',
+      icon: FileText,
+      children: [
+        { name: 'Recent Sales Report', href: '/admin/reports/sales' },
+        { name: 'Top Performing Agents', href: '/admin/reports/agents' },
+        { name: 'Property Views & Conversions', href: '/admin/reports/views' }
+      ]
+    },
     { name: 'Amenities', href: '/admin/amenities', icon: Settings },
     { name: 'Locations', href: '/admin/locations', icon: MapPin },
     { name: 'Categories', href: '/admin/categories', icon: Tag },
@@ -165,7 +174,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
           <div className="p-4">
             <ul className="space-y-2">
               {navigation.map((item) => {
-                const isActive = location.pathname === item.href;
+                const isActive = location.pathname === item.href || (item.children && item.children.some(child => location.pathname === child.href));
                 return (
                   <li key={item.name}>
                     <Link
@@ -179,6 +188,25 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                       <item.icon className="h-5 w-5" />
                       <span className="font-medium">{item.name}</span>
                     </Link>
+                    {/* Render submenu if item has children and is active */}
+                    {item.children && isActive && (
+                      <ul className="ml-8 mt-2 space-y-1">
+                        {item.children.map((child) => (
+                          <li key={child.name}>
+                            <Link
+                              to={child.href}
+                              className={`block px-2 py-1 rounded transition-colors ${
+                                location.pathname === child.href
+                                  ? 'bg-brand-green/20 text-brand-green'
+                                  : 'text-gray-600 hover:bg-gray-100'
+                              }`}
+                            >
+                              {child.name}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </li>
                 );
               })}
