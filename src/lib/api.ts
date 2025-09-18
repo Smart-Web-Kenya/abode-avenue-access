@@ -71,4 +71,70 @@ api.interceptors.response.use(
   }
 );
 
+// Dashboard API
+export const dashboardApi = {
+  // Get dashboard statistics
+  getStats: async (): Promise<{
+    totalProperties: number;
+    activeUsers: number;
+    propertiesSold: number;
+    totalBuyers: number;
+  }> => {
+    try {
+      const response = await api.get('/v1/dashboard/stats');
+      return response.data.data;
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+      throw error;
+    }
+  },
+
+  // Get recent properties
+  getRecentProperties: async (): Promise<Array<{
+    _id: string;
+    title: string;
+    price: number;
+    location: string;
+    images: Array<{ url: string }>;
+    status: string;
+    createdAt: string;
+    agent: { name: string };
+  }>> => {
+    try {
+      const response = await api.get('/v1/dashboard/recent-properties');
+      return response.data.data;
+    } catch (error) {
+      console.error('Error fetching recent properties:', error);
+      throw error;
+    }
+  },
+
+  // Get recent buyers
+  getRecentBuyers: async (): Promise<Array<{
+    _id: string;
+    saleDate: string;
+    amount: number;
+    status: string;
+    buyer: {
+      _id: string;
+      name: string;
+      email: string;
+      phone?: string;
+    };
+    property: {
+      _id: string;
+      title: string;
+      price: number;
+    };
+  }>> => {
+    try {
+      const response = await api.get('/v1/dashboard/recent-buyers');
+      return response.data.data;
+    } catch (error) {
+      console.error('Error fetching recent buyers:', error);
+      throw error;
+    }
+  },
+};
+
 export default api;

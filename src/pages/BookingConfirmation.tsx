@@ -17,12 +17,22 @@ const BookingConfirmation = () => {
 
   const handleConfirm = async () => {
     try {
-      setIsLoading(true); // Start loading
-      // Get the current user from local storage or context
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      setIsLoading(true);
       
-      if (!user?.id) {
-        throw new Error('You need to be logged in to make a booking');
+      // Get the current user and token from local storage
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const token = localStorage.getItem('token');
+      
+      // Check if user is logged in and has a valid token
+      if (!user?.id || !token) {
+        // Redirect to login if not authenticated
+        navigate('/signin', { 
+          state: { 
+            from: location.pathname,
+            message: 'Please login to complete your booking' 
+          } 
+        });
+        return;
       }
       
       // Check if property has an agent
@@ -47,7 +57,8 @@ const BookingConfirmation = () => {
         buyer: {
           name: user?.name || 'Guest User',
           email: user?.email,
-          phone: user?.phone || 'Not provided'
+          phone: user?.phone || 'Not provided',
+          id: user.id
         },
         date: booking?.preferredDate || new Date().toISOString(),
         commission: 0,
@@ -60,23 +71,41 @@ const BookingConfirmation = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(saleData)
       });
 
       if (!response.ok) {
-        throw new Error('Failed to save booking');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.message || 
+          `Failed to save booking: ${response.status} ${response.statusText}`
+        );
       }
 
       // Show success modal if everything went well
       setShowSuccess(true);
     } catch (error) {
       console.error('Error saving booking:', error);
-      // Show user-friendly error message
-      alert(error.message || 'Failed to save booking. Please try again.');
+      
+      // Handle token expiration or invalid token
+      if (error.message.includes('token') || error.message.includes('401')) {
+        // Clear invalid token and redirect to login
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        navigate('/login', { 
+          state: { 
+            from: location.pathname,
+            message: 'Your session has expired. Please login again.' 
+          } 
+        });
+      } else {
+        // Show other errors to the user
+        alert(error.message || 'Failed to save booking. Please try again.');
+      }
     } finally {
-      setIsLoading(false); // Stop loading in both success and error cases
+      setIsLoading(false);
     }
   };
 

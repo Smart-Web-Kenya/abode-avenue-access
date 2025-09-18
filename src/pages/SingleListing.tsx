@@ -7,7 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
-import { MapPin, Bath, Bed, Square, Calendar, Car, Wifi, Dumbbell, Shield, Trees, Play, Send } from 'lucide-react';
+import { MapPin, Bath, Bed, Square, Calendar, Car, Wifi, Dumbbell, Shield, Trees, Play, Send, Eye } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useNavigate } from "react-router-dom";
@@ -50,6 +50,7 @@ interface ApiProperty {
   amenities?: string[];
   video360Url?: string;
   contactPhones?: string[];
+  views?: number;
 }
 
 const SingleListing = () => {
@@ -382,6 +383,12 @@ const SingleListing = () => {
                     <Calendar className="h-8 w-8 mx-auto mb-2 text-brand-green" />
                     <div className="text-2xl font-semibold">{property.yearBuilt ?? '—'}</div>
                     <div className="text-sm text-gray-600">Year Built</div>
+                  </div>
+                  <div className="flex items-center space-x-4 text-sm text-gray-600">
+                    <div className="flex items-center">
+                      <Eye className="h-4 w-4 mr-1 text-gray-500" />
+                      <span>{property.views || 0} views</span>
+                    </div>
                   </div>
                 </div>
                 
