@@ -162,33 +162,19 @@ const AdminProperties = () => {
     
     return (
       <TableRow key={property._id}>
+        <TableCell className="font-medium">{property.title}</TableCell>
         <TableCell>
-          <div>
-            <p className="font-medium">{property.title}</p>
-            <p className="text-sm text-gray-500">
-              {new Date(property.createdAt).toLocaleDateString()}
-            </p>
+          <div className="flex flex-col">
+            <span className="font-medium">{property.location?.area || '—'}</span>
+            <span className="text-sm text-muted-foreground">
+              {[
+                property.location?.city,
+                property.location?.country
+              ].filter(Boolean).join(', ') || '—'}
+            </span>
           </div>
         </TableCell>
-        <TableCell>
-          <div className="space-y-1">
-            {property.location?.country && (
-              <div className="text-sm">{getLocationName(property.location.country)}</div>
-            )}
-            {property.location?.city && (
-              <div className="text-sm">{getLocationName(property.location.city)}</div>
-            )}
-            {property.location?.area && (
-              <div className="text-sm text-gray-500">{getLocationName(property.location.area)}</div>
-            )}
-            {property.location?.subArea && (
-              <div className="text-xs text-gray-400">{getLocationName(property.location.subArea)}</div>
-            )}
-          </div>
-        </TableCell>
-        <TableCell className="font-medium">
-          Ksh.{property.price?.toLocaleString()}
-        </TableCell>
+        <TableCell>Ksh. {property.price?.toLocaleString() || '—'}</TableCell>
         <TableCell>
           <Badge className={getStatusBadge(property.status || 'Available')}>
             {property.status || 'Available'}
@@ -252,16 +238,19 @@ const AdminProperties = () => {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Properties Management</h1>
-            <p className="text-gray-600 mt-2">Manage your property listings</p>
+            <h1 className="text-2xl font-bold tracking-tight">Properties</h1>
+            <p className="text-muted-foreground">
+              Manage your properties and listings
+            </p>
           </div>
-          {hasRole('admin') && (
+          
+          {(hasRole('admin') || hasRole('agent')) && (
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-brand-green hover:bg-brand-green/90">
-                  <Plus className="h-4 w-4 mr-2" />
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
                   Add Property
                 </Button>
               </DialogTrigger>
@@ -269,14 +258,12 @@ const AdminProperties = () => {
                 <DialogHeader>
                   <DialogTitle>Add New Property</DialogTitle>
                 </DialogHeader>
-                <div>
-                  <PropertyForm 
-                    onClose={() => {
-                      setIsAddDialogOpen(false);
-                      fetchProperties(searchTerm, pagination.page, pagination.limit);
-                    }} 
-                  />
-                </div>
+                <PropertyForm 
+                  onClose={() => {
+                    setIsAddDialogOpen(false);
+                    fetchProperties(searchTerm, pagination.page, pagination.limit);
+                  }} 
+                />
               </DialogContent>
             </Dialog>
           )}

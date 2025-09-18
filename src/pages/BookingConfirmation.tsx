@@ -13,13 +13,71 @@ const BookingConfirmation = () => {
   const property = location.state?.property;
 
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleConfirm = () => {
-    // 🔥 Call your API here to save the booking
-    console.log("Final booking confirmed:", booking, property);
+  const handleConfirm = async () => {
+    try {
+      setIsLoading(true); // Start loading
+      // Get the current user from local storage or context
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      
+      if (!user?.id) {
+        throw new Error('You need to be logged in to make a booking');
+      }
+      
+      // Check if property has an agent
+      if (!property?.agent_id) {
+        throw new Error('This property is not assigned to any agent. Please contact support.');
+      }
+      
+      // Prepare the sale data
+      const saleData = {
+        property: property?._id,
+        propertyDetails: {
+          title: property?.title,
+          location: [
+            property?.location?.subArea,
+            property?.location?.city,
+            property?.location?.country
+          ].filter(Boolean).join(', '),
+          image: property?.images?.[0]?._id
+        },
+        price: property?.price,
+        agent: property.agent_id,
+        buyer: {
+          name: user?.name || 'Guest User',
+          email: user?.email,
+          phone: user?.phone || 'Not provided'
+        },
+        date: booking?.preferredDate || new Date().toISOString(),
+        commission: 0,
+        createdBy: user.id,
+        status: 'pending'
+      };
 
-    // Show success modal
-    setShowSuccess(true);
+      // Make the API call to save the sale
+      const response = await fetch('http://127.0.0.1:3000/api/v1/sales', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(saleData)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save booking');
+      }
+
+      // Show success modal if everything went well
+      setShowSuccess(true);
+    } catch (error) {
+      console.error('Error saving booking:', error);
+      // Show user-friendly error message
+      alert(error.message || 'Failed to save booking. Please try again.');
+    } finally {
+      setIsLoading(false); // Stop loading in both success and error cases
+    }
   };
 
   return (
@@ -98,9 +156,20 @@ const BookingConfirmation = () => {
             <div className="flex justify-center gap-4">
               <Button
                 onClick={handleConfirm}
-                className="bg-brand-orange hover:bg-brand-orange/90 text-white"
+                className="bg-brand-orange hover:bg-brand-orange/90 text-white min-w-[120px]"
+                disabled={isLoading}
               >
-                Book Now
+                {isLoading ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Processing...
+                  </>
+                ) : (
+                  'Book Now'
+                )}
               </Button>
 
               <Link to={`/property/${property?._id}`}>
@@ -113,7 +182,7 @@ const BookingConfirmation = () => {
         </Card>
       </div>
 
-      {/* ✅ Success Modal */}
+      {/* Success Modal */}
       {showSuccess && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
           <div className="bg-white rounded-2xl shadow-lg p-8 flex flex-col items-center animate-scaleIn w-[90%] max-w-md">
@@ -147,7 +216,7 @@ const BookingConfirmation = () => {
 
       <Footer />
 
-      {/* ✨ Tailwind keyframes for smooth animation */}
+      {/* Tailwind keyframes for smooth animation */}
       <style>{`
         @keyframes scaleIn {
           from { transform: scale(0.8); opacity: 0; }

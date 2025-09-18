@@ -230,10 +230,14 @@ const Archive = () => {
                     <h3 className="text-lg font-semibold mb-2 text-gray-900 group-hover:text-blue-600 transition-colors">
                       {property.title}
                     </h3>
-                    <div className="flex items-center text-gray-600 mb-3">
-                      <MapPin className="h-4 w-4 mr-1" />
-                      <span className="text-sm">
-                        {property.location?.area || property.location?.city || property.location?.country || '—'}
+                    <div className="flex items-center text-gray-600 mb-2">
+                      <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
+                      <span className="text-sm truncate">
+                        {[
+                          property.location?.area,
+                          property.location?.city,
+                          property.location?.country
+                        ].filter(Boolean).join(', ') || '—'}
                       </span>
                     </div>
                     <div className="flex items-center justify-between mb-3 text-sm text-gray-600">

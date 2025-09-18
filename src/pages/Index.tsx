@@ -24,7 +24,12 @@ interface ApiProperty {
   _id: string;
   title: string;
   price: number;
-  location?: { city?: string; area?: string; country?: string };
+  location?: {
+    country: string;
+    city: string;
+    area: string;
+    subArea: string;
+  };
   bedrooms: number;
   bathrooms: number;
   sqft: number;
@@ -245,7 +250,7 @@ const Index = () => {
                     <div className="flex items-center text-gray-600 mb-3">
                       <MapPin className="h-4 w-4 mr-1" />
                       <span className="text-sm">
-                        {property.location?.area || property.location?.city || property.location?.country || '—'}
+                        {[property.location?.area, property.location?.city, property.location?.country].filter(Boolean).join(', ') || '—'}
                       </span>
                     </div>
                     <div className="flex items-center justify-between mb-4 text-sm text-gray-600">

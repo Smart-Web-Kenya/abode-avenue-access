@@ -62,10 +62,10 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
     },
     selectedAmenities: property?.amenities?.map((a: any) => a.name) || [],
     location: {
-      country: property?.location?.country || '',
-      city: property?.location?.city || '',
-      area: property?.location?.area || '',
-      subArea: property?.location?.subArea || ''
+      country: property?.location?.country || { id: '', name: '' },
+      city: property?.location?.city || { id: '', name: '' },
+      area: property?.location?.area || { id: '', name: '' },
+      subArea: property?.location?.subArea || { id: '', name: '' }
     },
     category: property?.category?._id || property?.category || ''
   });
@@ -127,15 +127,15 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
     fetchCurrentUser();
   }, []);
 
-  const handleLocationChange = async (level: 'country' | 'city' | 'area', parentId: string) => {
+  const handleLocationChange = async (level: 'country' | 'city' | 'area' | 'subarea', parentId: string, parentName: string) => {
     const newLocationState = { ...formData.location };
-    let nextLocationsState = { ...locations };
+    const nextLocationsState = { ...locations };
 
     if (level === 'country') {
-      newLocationState.country = parentId;
-      newLocationState.city = '';
-      newLocationState.area = '';
-      newLocationState.subArea = '';
+      newLocationState.country = { id: parentId, name: parentName };
+      newLocationState.city = { id: '', name: '' };
+      newLocationState.area = { id: '', name: '' };
+      newLocationState.subArea = { id: '', name: '' };
       nextLocationsState.cities = [];
       nextLocationsState.areas = [];
       nextLocationsState.subareas = [];
@@ -149,9 +149,9 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
         nextLocationsState.cities = citiesRes.data.data;
       }
     } else if (level === 'city') {
-      newLocationState.city = parentId;
-      newLocationState.area = '';
-      newLocationState.subArea = '';
+      newLocationState.city = { id: parentId, name: parentName };
+      newLocationState.area = { id: '', name: '' };
+      newLocationState.subArea = { id: '', name: '' };
       nextLocationsState.areas = [];
       nextLocationsState.subareas = [];
       if (parentId) {
@@ -164,8 +164,8 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
         nextLocationsState.areas = areasRes.data.data;
       }
     } else if (level === 'area') {
-      newLocationState.area = parentId;
-      newLocationState.subArea = '';
+      newLocationState.area = { id: parentId, name: parentName };
+      newLocationState.subArea = { id: '', name: '' };
       nextLocationsState.subareas = [];
       if (parentId) {
         const subareasRes = await axios.get(`http://127.0.0.1:3000/api/v1/locations?level=subarea&parent=${parentId}`, {
@@ -176,6 +176,8 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
         });
         nextLocationsState.subareas = subareasRes.data.data;
       }
+    } else if (level === 'subarea') {
+      newLocationState.subArea = { id: parentId, name: parentName };
     }
 
     setFormData(prev => ({ ...prev, location: newLocationState }));
@@ -260,40 +262,45 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
     setIsSubmitting(true);
 
     try {
-      const fd = new FormData();
-      fd.append('title', formData.title);
-      fd.append('price', formData.price.toString());
-      fd.append('description', formData.description);
-      fd.append('bedrooms', formData.bedrooms.toString());
-      fd.append('bathrooms', formData.bathrooms.toString());
-      fd.append('sqft', formData.sqft.toString());
-      fd.append('yearBuilt', formData.yearBuilt.toString());
-      fd.append('video360Url', formData.video360Url);
-      fd.append('location', JSON.stringify(formData.location));
-      fd.append('category', formData.category);
+      const formDataToSend = new FormData();
+      formDataToSend.append('title', formData.title);
+      formDataToSend.append('price', formData.price.toString());
+      formDataToSend.append('description', formData.description);
+      formDataToSend.append('bedrooms', formData.bedrooms.toString());
+      formDataToSend.append('bathrooms', formData.bathrooms.toString());
+      formDataToSend.append('sqft', formData.sqft.toString());
+      formDataToSend.append('yearBuilt', formData.yearBuilt.toString());
+      formDataToSend.append('video360Url', formData.video360Url);
+      formDataToSend.append('location', JSON.stringify({
+        country: formData.location.country.name,
+        city: formData.location.city.name,
+        area: formData.location.area.name,
+        subArea: formData.location.subArea.name
+      }));
+      formDataToSend.append('category', formData.category);
       
       // Add agent_id only when creating a new property
       if (!property?._id && currentUserId) {
-        fd.append('agent_id', currentUserId);
+        formDataToSend.append('agent_id', currentUserId);
       }
 
-      formData.contactPhones.forEach(p => fd.append('contactPhones[]', p));
-      formData.selectedAmenities.forEach(a => fd.append('selectedAmenities[]', a));
+      formData.contactPhones.forEach(p => formDataToSend.append('contactPhones[]', p));
+      formData.selectedAmenities.forEach(a => formDataToSend.append('selectedAmenities[]', a));
 
-      formData.images.forEach(img => fd.append('existingImages[]', JSON.stringify(img)));
-      selectedFiles.forEach(file => fd.append('images', file));
+      formData.images.forEach(img => formDataToSend.append('existingImages[]', JSON.stringify(img)));
+      selectedFiles.forEach(file => formDataToSend.append('images', file));
 
       let response;
       if (property?._id) {
         response = await axios.put(
           `http://127.0.0.1:3000/api/v1/properties/${property._id}`,
-          fd,
+          formDataToSend,
           { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'multipart/form-data' } }
         );
       } else {
         response = await axios.post(
           'http://127.0.0.1:3000/api/v1/properties',
-          fd,
+          formDataToSend,
           { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'multipart/form-data' } }
         );
       }
@@ -487,28 +494,40 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="country">Country</Label>
-              <select id="country" value={formData.location.country} onChange={(e) => handleLocationChange('country', e.target.value)} className="w-full p-2 border rounded-md">
+              <select id="country" value={formData.location.country.id} onChange={(e) => {
+                const selected = locations.countries.find(c => c._id === e.target.value);
+                handleLocationChange('country', e.target.value, selected?.name || '');
+              }} className="w-full p-2 border rounded-md">
                 <option value="">Select Country</option>
                 {locations.countries.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
               </select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="city">City</Label>
-              <select id="city" value={formData.location.city} onChange={(e) => handleLocationChange('city', e.target.value)} className="w-full p-2 border rounded-md" disabled={!formData.location.country}>
+              <select id="city" value={formData.location.city.id} onChange={(e) => {
+                const selected = locations.cities.find(c => c._id === e.target.value);
+                handleLocationChange('city', e.target.value, selected?.name || '');
+              }} className="w-full p-2 border rounded-md" disabled={!formData.location.country.id}>
                 <option value="">Select City</option>
                 {locations.cities.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
               </select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="area">Area</Label>
-              <select id="area" value={formData.location.area} onChange={(e) => handleLocationChange('area', e.target.value)} className="w-full p-2 border rounded-md" disabled={!formData.location.city}>
+              <select id="area" value={formData.location.area.id} onChange={(e) => {
+                const selected = locations.areas.find(c => c._id === e.target.value);
+                handleLocationChange('area', e.target.value, selected?.name || '');
+              }} className="w-full p-2 border rounded-md" disabled={!formData.location.city.id}>
                 <option value="">Select Area</option>
                 {locations.areas.map(a => <option key={a._id} value={a._id}>{a.name}</option>)}
               </select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="subArea">Sub Area</Label>
-              <select id="subArea" value={formData.location.subArea} onChange={(e) => setFormData(prev => ({ ...prev, location: { ...prev.location, subArea: e.target.value } }))} className="w-full p-2 border rounded-md" disabled={!formData.location.area}>
+              <select id="subArea" value={formData.location.subArea.id} onChange={(e) => {
+                const selected = locations.subareas.find(c => c._id === e.target.value);
+                handleLocationChange('subarea', e.target.value, selected?.name || '');
+              }} className="w-full p-2 border rounded-md" disabled={!formData.location.area.id}>
                 <option value="">Select Sub Area</option>
                 {locations.subareas.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
               </select>
