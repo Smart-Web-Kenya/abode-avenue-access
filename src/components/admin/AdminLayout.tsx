@@ -49,6 +49,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     { name: 'Amenities', href: '/admin/amenities', icon: Settings },
     { name: 'Locations', href: '/admin/locations', icon: MapPin },
     { name: 'Categories', href: '/admin/categories', icon: Tag },
+    { name: 'Blogs', href: '/admin/blogs', icon: FileText }, // <-- Add this line
   ];
 
   // Check authentication and user role

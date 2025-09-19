@@ -26,7 +26,7 @@ import MyBookings from "./pages/MyBookings";
 import SalesReport from "./pages/admin/reports/SalesReport";
 import AgentsReport from "./pages/admin/reports/AgentsReport";
 import ViewsReport from "./pages/admin/reports/ViewsReport";
-
+import Blogs from './pages/admin/Blogs'
 
 // Protected route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -146,6 +146,14 @@ const App = () => (
               <ProtectedRoute>
                 <AdminRoute>
                   <AdminCategories />
+                </AdminRoute>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/admin/blogs" element={
+              <ProtectedRoute>
+                <AdminRoute>
+                  <Blogs />
                 </AdminRoute>
               </ProtectedRoute>
             } />
