@@ -201,7 +201,7 @@ const BookingConfirmation = () => {
                 )}
               </Button>
 
-              <Link to={`/property/${property?._id}`}>
+              <Link to={`/archive`}>
                 <Button variant="outline" className="border-gray-300 text-gray-600">
                   Cancel
                 </Button>

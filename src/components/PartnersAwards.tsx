@@ -3,7 +3,7 @@ import { useState } from 'react';
 
 const PartnersAwards = () => {
   const partners = [
-    { name: "Real Estate Board", logo: "https://via.placeholder.com/120x60/036153/FFFFFF?text=REB" },
+    { name: "Real Estate Board", logo: "https://media.istockphoto.com/id/1295808919/photo/hong-kong-central-district-skyscrapers.jpg?s=612x612&w=0&k=20&c=wUzkai_7_LbovCgLG2HmpaoFc7TS8O3MXnxEW-d-VL4=" },
     { name: "Property Association", logo: "https://via.placeholder.com/120x60/FF6500/FFFFFF?text=PA" },
     { name: "Banking Partner", logo: "https://via.placeholder.com/120x60/036153/FFFFFF?text=BANK" },
     { name: "Insurance Partner", logo: "https://via.placeholder.com/120x60/FF6500/FFFFFF?text=INS" },

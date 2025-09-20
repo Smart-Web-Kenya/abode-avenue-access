@@ -1,114 +1,120 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { format } from 'date-fns';
-import { Plus, Search, Edit, Trash2, Eye, Calendar, User, Clock, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { toast } from '@/components/ui/use-toast';
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import AdminLayout from '@/components/admin/AdminLayout';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "@/components/ui/use-toast";
+import { format } from "date-fns";
+import { Search, List, Grid, Calendar, Clock, Tag, Folder, Eye, Edit, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-type Blog = {
-  id: number;
+interface Blog {
+  _id: string;
   title: string;
-  slug: string;
   excerpt: string;
   content: string;
   author: string;
-  authorImage?: string;
-  date: string;
-  status: 'draft' | 'published' | 'archived';
-  readTime: number;
-  image?: string;
+  authorName: string;
+  featuredImage?: { url: string; altText: string };
   categories: string[];
   tags: string[];
+  readTime: number;
+  status: string;
+  seo: { metaTitle: string; metaDescription: string; keywords: string[] };
+  createdAt: string;
+}
+
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token'); // or 'authToken' depending on your app
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+  };
 };
 
-const Blogs = () => {
-  const navigate = useNavigate();
+const BlogsPage = () => {
   const [blogs, setBlogs] = useState<Blog[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedBlog, setSelectedBlog] = useState<Blog | null>(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [formData, setFormData] = useState<Omit<Blog, 'id' | 'slug'>>({ 
-    title: '',
-    excerpt: '',
-    content: '',
-    author: 'Admin User',
-    authorImage: '',
-    date: new Date().toISOString().split('T')[0],
-    status: 'draft',
-    readTime: 5,
-    image: '',
+  const [formData, setFormData] = useState<Partial<Blog>>({
+    title: "",
+    excerpt: "",
+    content: "",
+    author: "",
+    authorName: "Admin User",
+    featuredImage: { url: "", altText: "" },
     categories: [],
     tags: [],
+    readTime: 5,
+    status: "draft",
+    seo: { metaTitle: "", metaDescription: "", keywords: [] },
   });
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  const itemsPerPage = 8;
-  const totalPages = Math.ceil(blogs.length / itemsPerPage);
-  
-  // Filter blogs based on search query
-  const filteredBlogs = blogs.filter(blog => 
-    blog.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    blog.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    blog.author.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const [view, setView] = useState<"grid" | "list">("grid");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [sortConfig, setSortConfig] = useState<{
+    key: keyof Blog;
+    direction: "ascending" | "descending";
+  }>({ key: "createdAt", direction: "descending" });
+  const itemsPerPage = 9;
 
-  // Get current blogs for pagination
-  const currentBlogs = filteredBlogs.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  // Fetch blogs from API
+  // ✅ Fetch blogs
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
         setLoading(true);
-        // TODO: Replace with actual API call
-        // const response = await fetch('/api/admin/blogs');
-        // const data = await response.json();
-        // setBlogs(data);
+        const res = await fetch("http://127.0.0.1:3000/api/v1/blogs", {
+          headers: getAuthHeaders()
+        });
         
-        // Mock data for now
-        setTimeout(() => {
-          setBlogs([
-            {
-              id: 1,
-              title: "How to Invest in Real Estate in Kenya",
-              slug: "how-to-invest-in-real-estate-kenya",
-              excerpt: "A comprehensive guide for beginners looking to invest in the Kenyan real estate market.",
-              content: "Full content here...",
-              author: "Jane Mwangi",
-              authorImage: "https://randomuser.me/api/portraits/women/1.jpg",
-              date: "2025-09-10",
-              status: "published",
-              readTime: 5,
-              image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80",
-              categories: ["Investment", "Kenya"],
-              tags: ["real estate", "investing", "beginners"]
-            },
-            // Add more mock data as needed
-          ]);
-          setLoading(false);
-        }, 800);
-      } catch (error) {
-        console.error('Error fetching blogs:', error);
+        if (!res.ok) {
+          if (res.status === 401) {
+            // Handle unauthorized (e.g., redirect to login)
+            window.location.href = '/login';
+            return;
+          }
+          throw new Error("Failed to fetch blogs");
+        }
+        
+        const data = await res.json();
+        setBlogs(data.data || []);
+      } catch (err) {
+        console.error("Error fetching blogs:", err);
         toast({
           title: "Error",
-          description: "Failed to load blogs. Please try again.",
-          variant: "destructive"
+          description: "Failed to load blogs",
+          variant: "destructive",
         });
+      } finally {
         setLoading(false);
       }
     };
@@ -116,477 +122,835 @@ const Blogs = () => {
     fetchBlogs();
   }, []);
 
-  const handleCreateBlog = async (e: React.FormEvent) => {
-    e.preventDefault();
-    // TODO: Implement API call to create blog
-    const newBlog = {
-      id: blogs.length + 1,
-      slug: formData.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, ''),
-      ...formData
-    };
-    
-    setBlogs([newBlog, ...blogs]);
-    setShowCreateModal(false);
-    setFormData({ 
-      title: '',
-      excerpt: '',
-      content: '',
-      author: 'Admin User',
-      authorImage: '',
-      date: new Date().toISOString().split('T')[0],
-      status: 'draft',
-      readTime: 5,
-      image: '',
-      categories: [],
-      tags: [],
-    });
-    
-    toast({
-      title: "Success",
-      description: "Blog post created successfully!",
-    });
+  // ✅ Handle form input
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleDeleteBlog = async () => {
-    if (!selectedBlog) return;
-    
+  // ✅ Handle image selection
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setSelectedImage(file);
+
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // ✅ Open modal for create
+  const openCreateModal = () => {
+    setFormData({
+      title: "",
+      excerpt: "",
+      content: "",
+      author: "",
+      authorName: "Admin User",
+      featuredImage: { url: "", altText: "" },
+      categories: [],
+      tags: [],
+      readTime: 5,
+      status: "draft",
+      seo: { metaTitle: "", metaDescription: "", keywords: [] },
+    });
+    setSelectedBlog(null);
+    setSelectedImage(null);
+    setImagePreview(null);
+    setShowCreateModal(true);
+  };
+
+  // ✅ Save (create or update)
+  const handleSaveBlog = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
     try {
-      // TODO: Implement API call to delete blog
-      // await fetch(`/api/admin/blogs/${selectedBlog.id}`, { method: 'DELETE' });
-      
-      setBlogs(blogs.filter(blog => blog.id !== selectedBlog.id));
-      setShowDeleteDialog(false);
-      
+      const formDataToSend = new FormData();
+
+      // Append text fields
+      Object.keys(formData).forEach((key) => {
+        if (key === "featuredImage") return; // Skip featuredImage as we handle it separately
+        if (key === "seo") {
+          formDataToSend.append("seo", JSON.stringify(formData[key]));
+        } else if (Array.isArray(formData[key as keyof typeof formData])) {
+          formDataToSend.append(key, JSON.stringify(formData[key as keyof typeof formData]));
+        } else if (formData[key as keyof typeof formData] !== undefined) {
+          formDataToSend.append(key, String(formData[key as keyof typeof formData]));
+        }
+      });
+
+      // Append image if selected
+      if (selectedImage) {
+        formDataToSend.append("featuredImage", selectedImage);
+      } else if (formData.featuredImage?.url) {
+        // If no new image but existing image URL exists, send the existing URL
+        formDataToSend.append("featuredImageUrl", formData.featuredImage.url);
+        formDataToSend.append("featuredImageAlt", formData.featuredImage.altText || "");
+      }
+
+      const method = selectedBlog ? "PUT" : "POST";
+      const url = selectedBlog
+        ? `http://127.0.0.1:3000/api/v1/blogs/${selectedBlog._id}`
+        : "http://127.0.0.1:3000/api/v1/blogs";
+
+      // Get token from localStorage
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/login';
+        return;
+      }
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Authorization': `Bearer ${token}`
+          // Don't set Content-Type when sending FormData, let the browser set it with boundary
+        },
+        body: formDataToSend,
+      });
+
+      if (!res.ok) {
+        if (res.status === 401) {
+          window.location.href = '/login';
+          return;
+        }
+        const error = await res.json();
+        throw new Error(error.message || "Failed to save blog");
+      }
+
+      const savedBlog = await res.json();
+
+      if (selectedBlog) {
+        setBlogs(blogs.map((b) => (b._id === selectedBlog._id ? savedBlog.data : b)));
+      } else {
+        setBlogs([savedBlog.data, ...blogs]);
+      }
+
+      setShowCreateModal(false);
+      setSelectedBlog(null);
+      setSelectedImage(null);
+      setImagePreview(null);
+
       toast({
         title: "Success",
-        description: "Blog post deleted successfully!",
+        description: `Blog ${selectedBlog ? "updated" : "created"} successfully`,
       });
-    } catch (error) {
-      console.error('Error deleting blog:', error);
+    } catch (err) {
+      console.error("Error saving blog:", err);
       toast({
         title: "Error",
-        description: "Failed to delete blog post. Please try again.",
-        variant: "destructive"
+        description: err instanceof Error ? err.message : "Failed to save blog",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Edit blog
+  const handleEditBlog = (blog: Blog) => {
+    setSelectedBlog(blog);
+    setFormData(blog);
+    setImagePreview(blog.featuredImage?.url || null);
+    setSelectedImage(null);
+    setShowCreateModal(true);
+  };
+
+  // ✅ Delete blog
+  const handleDeleteBlog = async () => {
+    if (!selectedBlog) return;
+    try {
+      // Get token from localStorage
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/login';
+        return;
+      }
+
+      const res = await fetch(
+        `http://127.0.0.1:3000/api/v1/blogs/${selectedBlog._id}`,
+        { 
+          method: "DELETE",
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      if (res.status === 401) {
+        window.location.href = '/login';
+        return;
+      }
+      
+      if (!res.ok) throw new Error("Failed to delete blog");
+
+      setBlogs(blogs.filter((b) => b._id !== selectedBlog._id));
+      setShowDeleteDialog(false);
+      setSelectedBlog(null);
+
+      toast({
+        title: "Deleted",
+        description: "Blog deleted successfully",
+      });
+    } catch (err) {
+      console.error("Error deleting blog:", err);
+      toast({
+        title: "Error",
+        description: "Failed to delete blog",
+        variant: "destructive",
       });
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    const statusMap = {
-      published: { label: 'Published', variant: 'bg-green-100 text-green-800' },
-      draft: { label: 'Draft', variant: 'bg-yellow-100 text-yellow-800' },
-      archived: { label: 'Archived', variant: 'bg-gray-100 text-gray-800' },
-    };
-    
-    const { label, variant } = statusMap[status as keyof typeof statusMap] || { label: status, variant: 'bg-gray-100 text-gray-800' };
-    
-    return <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${variant}`}>{label}</span>;
+  // Filter and sort blogs
+  const filteredBlogs = blogs
+    .filter((blog) => {
+      const matchesSearch = blog.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        blog.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = statusFilter === "all" || blog.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    })
+    .sort((a, b) => {
+      if (a[sortConfig.key] < b[sortConfig.key]) {
+        return sortConfig.direction === "ascending" ? -1 : 1;
+      }
+      if (a[sortConfig.key] > b[sortConfig.key]) {
+        return sortConfig.direction === "ascending" ? 1 : -1;
+      }
+      return 0;
+    });
+
+  // Pagination
+  const totalPages = Math.ceil(filteredBlogs.length / itemsPerPage);
+  const currentBlogs = filteredBlogs.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const requestSort = (key: keyof Blog) => {
+    let direction: "ascending" | "descending" = "ascending";
+    if (sortConfig.key === key && sortConfig.direction === "ascending") {
+      direction = "descending";
+    }
+    setSortConfig({ key, direction });
   };
 
-  if (loading) {
-    return (
-      <AdminLayout>
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
-        </div>
-      </AdminLayout>
-    );
-  }
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'published':
+        return <Badge variant="success">Published</Badge>;
+      case 'draft':
+        return <Badge variant="outline">Draft</Badge>;
+      case 'archived':
+        return <Badge variant="destructive">Archived</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Blog Posts</h1>
-            <p className="text-muted-foreground">
-              Manage your blog posts and content
-            </p>
+
+    <div className="p-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">Blog Management</h1>
+          <p className="text-sm text-muted-foreground">
+            Manage your blog posts and content
+          </p>
+        </div>
+        <div className="flex gap-2 w-full md:w-auto">
+          <div className="relative flex-1 md:w-64">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search blogs..."
+              className="pl-8 w-full"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
-          <Button onClick={() => setShowCreateModal(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            New Post
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="whitespace-nowrap">
+                {statusFilter === 'all' ? 'All Status' : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setStatusFilter('all')}>
+                All
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatusFilter('published')}>
+                Published
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatusFilter('draft')}>
+                Draft
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatusFilter('archived')}>
+                Archived
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button onClick={openCreateModal} className="whitespace-nowrap">
+            + New Blog
           </Button>
         </div>
+      </div>
 
-        <Card>
-          <CardHeader className="pb-0">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div className="relative w-full sm:w-80">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search posts..."
-                  className="pl-10 w-full"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+      <Tabs defaultValue={view} onValueChange={(value) => setView(value as "grid" | "list")}>
+        <div className="flex justify-between items-center mb-4">
+          <TabsList>
+            <TabsTrigger value="grid" className="flex items-center gap-2">
+              <Grid className="h-4 w-4" /> Grid
+            </TabsTrigger>
+            <TabsTrigger value="list" className="flex items-center gap-2">
+              <List className="h-4 w-4" /> List
+            </TabsTrigger>
+          </TabsList>
+          <div className="text-sm text-muted-foreground">
+            {filteredBlogs.length} {filteredBlogs.length === 1 ? 'post' : 'posts'} found
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <p>Loading blogs...</p>
+          </div>
+        ) : (
+          <>
+            <TabsContent value="grid">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {currentBlogs.map((blog) => (
+                  <Card key={blog._id} className="overflow-hidden hover:shadow-md transition-shadow">
+                    {blog.featuredImage?.url && (
+                      <div className="relative h-48 bg-muted">
+                        <img
+                          src={blog.featuredImage.url}
+                          alt={blog.featuredImage.altText || blog.title}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute top-2 right-2">
+                          {getStatusBadge(blog.status)}
+                        </div>
+                      </div>
+                    )}
+                    <CardHeader>
+                      <div className="flex justify-between items-start gap-2">
+                        <CardTitle className="text-lg line-clamp-2">{blog.title}</CardTitle>
+                      </div>
+                      <div className="flex items-center text-sm text-muted-foreground gap-4 mt-1">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-3.5 w-3.5" />
+                          <span>{blog.createdAt ? format(new Date(blog.createdAt), 'MMM d, yyyy') : 'N/A'}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-3.5 w-3.5" />
+                          <span>{blog.readTime || 5} min read</span>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {blog.categories?.slice(0, 2).map((category, i) => (
+                          <Badge key={i} variant="secondary" className="text-xs">
+                            {category}
+                          </Badge>
+                        ))}
+                        {blog.categories?.length > 2 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{blog.categories.length - 2} more
+                          </Badge>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+                        {blog.excerpt}
+                      </p>
+                      <div className="flex justify-between items-center">
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditBlog(blog)}
+                          >
+                            <Edit className="h-4 w-4 mr-1" /> Edit
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedBlog(blog);
+                              setShowDeleteDialog(true);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" />
+                          </Button>
+                        </div>
+                        <Button variant="ghost" size="sm" className="text-muted-foreground">
+                          <Eye className="h-4 w-4 mr-1" /> View
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-              <div className="flex items-center space-x-2">
-                <Button variant="outline" size="sm" className="h-9">
-                  Filter
-                </Button>
-                <Button variant="outline" size="sm" className="h-9">
-                  Export
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          
-          <CardContent className="p-0">
-            <div className="border-t">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[300px]">Title</TableHead>
-                    <TableHead>Author</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Categories</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {currentBlogs.length > 0 ? (
-                    currentBlogs.map((blog) => (
-                      <TableRow key={blog.id} className="group hover:bg-muted/50">
+            </TabsContent>
+
+            <TabsContent value="list">
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => requestSort("title")}
+                      >
+                        Title
+                        {sortConfig.key === "title" && (
+                          <span className="ml-1">
+                            {sortConfig.direction === "ascending" ? "↑" : "↓"}
+                          </span>
+                        )}
+                      </TableHead>
+                      <TableHead>Categories</TableHead>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => requestSort("status")}
+                      >
+                        Status
+                        {sortConfig.key === "status" && (
+                          <span className="ml-1">
+                            {sortConfig.direction === "ascending" ? "↑" : "↓"}
+                          </span>
+                        )}
+                      </TableHead>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => requestSort("createdAt")}
+                      >
+                        Date
+                        {sortConfig.key === "createdAt" && (
+                          <span className="ml-1">
+                            {sortConfig.direction === "ascending" ? "↑" : "↓"}
+                          </span>
+                        )}
+                      </TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {currentBlogs.map((blog) => (
+                      <TableRow key={blog._id}>
                         <TableCell className="font-medium">
-                          <div className="flex items-center space-x-3">
-                            {blog.image && (
+                          <div className="flex items-center gap-3">
+                            {blog.featuredImage?.url && (
                               <img
-                                src={blog.image}
-                                alt={blog.title}
+                                src={blog.featuredImage.url}
+                                alt={blog.featuredImage.altText || ''}
                                 className="h-10 w-10 rounded-md object-cover"
                               />
                             )}
-                            <span className="line-clamp-1">{blog.title}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <Avatar className="h-8 w-8">
-                              <AvatarImage src={blog.authorImage} alt={blog.author} />
-                              <AvatarFallback>{blog.author.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <span>{blog.author}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>{getStatusBadge(blog.status)}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center text-sm text-muted-foreground">
-                            <Calendar className="w-4 h-4 mr-1" />
-                            {format(new Date(blog.date), 'MMM d, yyyy')}
+                            <div>
+                              <div className="font-medium">{blog.title}</div>
+                              <div className="text-sm text-muted-foreground line-clamp-1">
+                                {blog.excerpt}
+                              </div>
+                            </div>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-wrap gap-1 max-w-[200px]">
-                            {blog.categories.slice(0, 2).map((cat, i) => (
+                            {blog.categories?.slice(0, 2).map((category, i) => (
                               <Badge key={i} variant="outline" className="text-xs">
-                                {cat}
+                                {category}
                               </Badge>
                             ))}
-                            {blog.categories.length > 2 && (
+                            {blog.categories?.length > 2 && (
                               <Badge variant="outline" className="text-xs">
                                 +{blog.categories.length - 2}
                               </Badge>
                             )}
                           </div>
                         </TableCell>
-                        <TableCell>
-                          <div className="flex justify-end space-x-2">
+                        <TableCell>{getStatusBadge(blog.status)}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {blog.createdAt ? format(new Date(blog.createdAt), 'MMM d, yyyy') : 'N/A'}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => navigate(`/blog/${blog.slug}`)}
-                              className="h-8 w-8 opacity-0 group-hover:opacity-100"
-                            >
-                              <Eye className="h-4 w-4" />
-                              <span className="sr-only">View</span>
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                setFormData({
-                                  title: blog.title,
-                                  excerpt: blog.excerpt,
-                                  content: blog.content,
-                                  author: blog.author,
-                                  authorImage: blog.authorImage,
-                                  date: blog.date,
-                                  status: blog.status,
-                                  readTime: blog.readTime,
-                                  image: blog.image || '',
-                                  categories: blog.categories,
-                                  tags: blog.tags,
-                                });
-                                setShowCreateModal(true);
-                              }}
-                              className="h-8 w-8 opacity-0 group-hover:opacity-100"
+                              className="h-8 w-8"
+                              onClick={() => handleEditBlog(blog)}
                             >
                               <Edit className="h-4 w-4" />
-                              <span className="sr-only">Edit</span>
                             </Button>
                             <Button
                               variant="ghost"
                               size="icon"
+                              className="h-8 w-8 text-destructive hover:text-destructive"
                               onClick={() => {
                                 setSelectedBlog(blog);
                                 setShowDeleteDialog(true);
                               }}
-                              className="h-8 w-8 text-destructive hover:text-destructive/90 hover:bg-destructive/10 opacity-0 group-hover:opacity-100"
                             >
                               <Trash2 className="h-4 w-4" />
-                              <span className="sr-only">Delete</span>
                             </Button>
                           </div>
                         </TableCell>
                       </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={6} className="h-24 text-center">
-                        No blog posts found.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-          
-          {totalPages > 1 && (
-            <CardFooter className="flex items-center justify-between px-6 py-4 border-t">
-              <div className="text-sm text-muted-foreground">
-                Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> to{' '}
-                <span className="font-medium">
-                  {Math.min(currentPage * itemsPerPage, filteredBlogs.length)}
-                </span>{' '}
-                of <span className="font-medium">{filteredBlogs.length}</span> posts
+                    ))}
+                    {currentBlogs.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={5} className="h-24 text-center">
+                          No blogs found.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
               </div>
-              <Pagination className="m-0">
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious 
-                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                      className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                    />
-                  </PaginationItem>
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    // Logic to show current page in the middle when possible
-                    let pageNum;
-                    if (totalPages <= 5) {
-                      pageNum = i + 1;
-                    } else if (currentPage <= 3) {
-                      pageNum = i + 1;
-                    } else if (currentPage >= totalPages - 2) {
-                      pageNum = totalPages - 4 + i;
-                    } else {
-                      pageNum = currentPage - 2 + i;
-                    }
-                    
-                    return (
-                      <PaginationItem key={i}>
-                        <PaginationLink 
-                          isActive={currentPage === pageNum}
-                          onClick={() => setCurrentPage(pageNum)}
-                          className="cursor-pointer"
-                        >
-                          {pageNum}
-                        </PaginationLink>
-                      </PaginationItem>
-                    );
-                  })}
-                  <PaginationItem>
-                    <PaginationNext 
-                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                      className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            </CardFooter>
-          )}
-        </Card>
-      </div>
+            </TabsContent>
+          </>
+        )}
 
-      {/* Create/Edit Blog Modal */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between mt-6">
+            <div className="text-sm text-muted-foreground">
+              Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> to{' '}
+              <span className="font-medium">
+                {Math.min(currentPage * itemsPerPage, filteredBlogs.length)}
+              </span>{' '}
+              of <span className="font-medium">{filteredBlogs.length}</span> posts
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </Button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  // Calculate page numbers with ellipsis
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={currentPage === pageNum ? "default" : "outline"}
+                      size="sm"
+                      className={`h-8 w-8 p-0 ${currentPage === pageNum ? 'bg-primary text-primary-foreground' : ''}`}
+                      onClick={() => setCurrentPage(pageNum)}
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
+                {totalPages > 5 && currentPage < totalPages - 2 && (
+                  <span className="px-2">...</span>
+                )}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
+      </Tabs>
+
+      {/* Create/Edit Modal */}
       <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{formData.title ? 'Edit Blog Post' : 'Create New Blog Post'}</DialogTitle>
+            <DialogTitle>{selectedBlog ? "Edit Blog" : "Create New Blog"}</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleCreateBlog} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="title">Title *</Label>
-                <Input
-                  id="title"
-                  name="title"
-                  value={formData.title}
-                  onChange={(e) => setFormData({...formData, title: e.target.value})}
-                  placeholder="Enter blog title"
-                  required
-                />
+          <form onSubmit={handleSaveBlog} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Title</label>
+                  <Input
+                    name="title"
+                    value={formData.title}
+                    onChange={handleInputChange}
+                    placeholder="Blog title"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Excerpt</label>
+                  <Textarea
+                    name="excerpt"
+                    value={formData.excerpt}
+                    onChange={handleInputChange}
+                    placeholder="Short description"
+                    rows={3}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Content</label>
+                  <Textarea
+                    name="content"
+                    value={formData.content}
+                    onChange={handleInputChange}
+                    placeholder="Blog content"
+                    rows={6}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Categories (comma separated)</label>
+                  <Input
+                    name="categories"
+                    value={formData.categories?.join(", ")}
+                    onChange={(e) => {
+                      const categories = e.target.value
+                        .split(",")
+                        .map((cat) => cat.trim())
+                        .filter(Boolean);
+                      setFormData({ ...formData, categories });
+                    }}
+                    placeholder="e.g., Technology, Business, Design"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Tags (comma separated)</label>
+                  <Input
+                    name="tags"
+                    value={formData.tags?.join(", ")}
+                    onChange={(e) => {
+                      const tags = e.target.value
+                        .split(",")
+                        .map((tag) => tag.trim())
+                        .filter(Boolean);
+                      setFormData({ ...formData, tags });
+                    }}
+                    placeholder="e.g., react, node, design"
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
-                <select
-                  id="status"
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  value={formData.status}
-                  onChange={(e) => setFormData({...formData, status: e.target.value as any})}
-                >
-                  <option value="draft">Draft</option>
-                  <option value="published">Published</option>
-                  <option value="archived">Archived</option>
-                </select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="date">Publish Date</Label>
-                <Input
-                  type="date"
-                  id="date"
-                  value={formData.date}
-                  onChange={(e) => setFormData({...formData, date: e.target.value})}
-                  className="w-full"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="readTime">Read Time (minutes)</Label>
-                <Input
-                  type="number"
-                  id="readTime"
-                  min="1"
-                  value={formData.readTime}
-                  onChange={(e) => setFormData({...formData, readTime: parseInt(e.target.value) || 5})}
-                  className="w-full"
-                />
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="excerpt">Excerpt *</Label>
-                <Textarea
-                  id="excerpt"
-                  name="excerpt"
-                  value={formData.excerpt}
-                  onChange={(e) => setFormData({...formData, excerpt: e.target.value})}
-                  placeholder="A short summary of your blog post"
-                  rows={3}
-                  required
-                />
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label>Featured Image</Label>
-                <div className="flex items-center gap-4">
-                  {formData.image ? (
-                    <div className="relative group">
-                      <img
-                        src={formData.image}
-                        alt="Preview"
-                        className="h-32 w-full rounded-md object-cover border"
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Featured Image</label>
+                  <div className="mt-1 flex items-center">
+                    <label
+                      htmlFor="featured-image"
+                      className="cursor-pointer bg-gray-50 rounded-md border border-dashed border-gray-300 p-4 w-full text-center hover:bg-gray-100 transition-colors"
+                    >
+                      {imagePreview ? (
+                        <div className="relative group">
+                          <img
+                            src={imagePreview}
+                            alt="Preview"
+                            className="w-full h-48 object-cover rounded-lg"
+                          />
+                          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span className="text-white">Change Image</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-1">
+                          <svg
+                            className="mx-auto h-12 w-12 text-gray-400"
+                            stroke="currentColor"
+                            fill="none"
+                            viewBox="0 0 48 48"
+                            aria-hidden="true"
+                          >
+                            <path
+                              d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                              strokeWidth={2}
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                          <div className="flex text-sm text-gray-600">
+                            <span className="relative cursor-pointer rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none">
+                              Upload an image
+                            </span>
+                            <p className="pl-1">or drag and drop</p>
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            PNG, JPG, WEBP up to 5MB
+                          </p>
+                        </div>
+                      )}
+                      <input
+                        id="featured-image"
+                        name="featured-image"
+                        type="file"
+                        className="sr-only"
+                        accept="image/*"
+                        onChange={handleImageChange}
                       />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        className="absolute -top-2 -right-2 h-6 w-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={() => setFormData({...formData, image: ''})}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-md">
-                      <label
-                        htmlFor="image-upload"
-                        className="flex flex-col items-center justify-center w-full h-full cursor-pointer"
-                      >
-                        <Plus className="h-6 w-6 text-muted-foreground mb-2" />
-                        <span className="text-sm text-muted-foreground">Click to upload</span>
-                        <input
-                          id="image-upload"
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              const reader = new FileReader();
-                              reader.onload = (event) => {
-                                setFormData({...formData, image: event.target?.result as string});
-                              };
-                              reader.readAsDataURL(file);
-                            }
-                          }}
-                        />
+                    </label>
+                  </div>
+                  {formData.featuredImage?.altText && (
+                    <div className="mt-2">
+                      <label className="block text-sm font-medium mb-1">
+                        Image Alt Text
                       </label>
+                      <Input
+                        name="featuredImage.altText"
+                        value={formData.featuredImage.altText}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            featuredImage: {
+                              ...formData.featuredImage!,
+                              altText: e.target.value,
+                            },
+                          })
+                        }
+                        placeholder="Describe the image for accessibility"
+                      />
                     </div>
                   )}
                 </div>
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="categories">Categories (comma-separated)</Label>
-                <Input
-                  id="categories"
-                  value={formData.categories.join(', ')}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    categories: e.target.value.split(',').map(cat => cat.trim()).filter(Boolean)
-                  })}
-                  placeholder="e.g., Real Estate, Investment, Tips"
-                />
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="tags">Tags (comma-separated)</Label>
-                <Input
-                  id="tags"
-                  value={formData.tags.join(', ')}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    tags: e.target.value.split(',').map(tag => tag.trim()).filter(Boolean)
-                  })}
-                  placeholder="e.g., real-estate, investment, kenya"
-                />
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="content">Content *</Label>
-                <Textarea
-                  id="content"
-                  name="content"
-                  value={formData.content}
-                  onChange={(e) => setFormData({...formData, content: e.target.value})}
-                  placeholder="Write your blog post content here..."
-                  rows={8}
-                  className="font-mono text-sm"
-                  required
-                />
-                <p className="text-xs text-muted-foreground">
-                  Supports Markdown formatting
-                </p>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Status</label>
+                  <select
+                    name="status"
+                    value={formData.status}
+                    onChange={handleInputChange}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value="draft">Draft</option>
+                    <option value="published">Published</option>
+                    <option value="archived">Archived</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Read Time (minutes)</label>
+                  <Input
+                    name="readTime"
+                    type="number"
+                    min="1"
+                    value={formData.readTime}
+                    onChange={handleInputChange}
+                  />
+                </div>
+
+                <div className="border-t pt-4">
+                  <h3 className="text-sm font-medium mb-2">SEO Settings</h3>
+                  <div className="space-y-2">
+                    <div>
+                      <label className="block text-xs font-medium mb-1">Meta Title</label>
+                      <Input
+                        name="seo.metaTitle"
+                        value={formData.seo?.metaTitle || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            seo: {
+                              ...formData.seo,
+                              metaTitle: e.target.value,
+                            },
+                          })
+                        }
+                        placeholder="SEO title"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium mb-1">Meta Description</label>
+                      <Textarea
+                        name="seo.metaDescription"
+                        value={formData.seo?.metaDescription || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            seo: {
+                              ...formData.seo,
+                              metaDescription: e.target.value,
+                            },
+                          })
+                        }
+                        placeholder="SEO description"
+                        rows={2}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium mb-1">Keywords (comma separated)</label>
+                      <Input
+                        name="seo.keywords"
+                        value={formData.seo?.keywords?.join(", ") || ""}
+                        onChange={(e) => {
+                          const keywords = e.target.value
+                            .split(",")
+                            .map((kw) => kw.trim())
+                            .filter(Boolean);
+                          setFormData({
+                            ...formData,
+                            seo: {
+                              ...formData.seo,
+                              keywords,
+                            },
+                          });
+                        }}
+                        placeholder="seo, keywords, blog"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setShowCreateModal(false)}>
+
+            <DialogFooter className="mt-6">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowCreateModal(false)}
+                disabled={loading}
+              >
                 Cancel
               </Button>
-              <Button type="submit">
-                {formData.title ? 'Update' : 'Create'} Post
+              <Button type="submit" disabled={loading}>
+                {loading ? "Saving..." : "Save Blog"}
               </Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
+      {/* Delete Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Blog Post</DialogTitle>
+            <DialogTitle>Delete Blog</DialogTitle>
           </DialogHeader>
-          <div className="py-4">
-            <p className="text-sm text-muted-foreground">
-              Are you sure you want to delete "{selectedBlog?.title}"? This action cannot be undone.
-            </p>
-          </div>
+          <p>Are you sure you want to delete this blog?</p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
               Cancel
@@ -597,8 +961,9 @@ const Blogs = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
     </AdminLayout>
   );
 };
 
-export default Blogs;
+export default BlogsPage;
