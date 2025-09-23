@@ -34,7 +34,7 @@ const AdminLocations = () => {
   const fetchLocations = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get('http://127.0.0.1:3000/api/v1/locations');
+      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/v1/locations`);
       setLocations(response.data.data);
     } catch (error) {
       console.error('Error fetching locations:', error);
@@ -51,7 +51,7 @@ const AdminLocations = () => {
   const handleAddLocation = async () => {
     try {
       const payload = { ...newLocation, parent: newLocation.parent || null };
-      await axios.post('http://127.0.0.1:3000/api/v1/locations', payload);
+      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/v1/locations`, payload);
       toast({ title: 'Success', description: 'Location added successfully' });
       setIsAddDialogOpen(false);
       fetchLocations();
@@ -65,7 +65,7 @@ const AdminLocations = () => {
   const handleUpdateLocation = async () => {
     if (!selectedLocation) return;
     try {
-      await axios.put(`http://127.0.0.1:3000/api/v1/locations/${selectedLocation._id}`, { name: selectedLocation.name });
+      await axios.put(`${import.meta.env.VITE_API_BASE_URL}/api/v1/locations/${selectedLocation._id}`, { name: selectedLocation.name });
       toast({ title: 'Success', description: 'Location updated successfully' });
       setIsEditDialogOpen(false);
       fetchLocations();
@@ -78,7 +78,7 @@ const AdminLocations = () => {
   const handleDeleteLocation = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this location?')) {
       try {
-        await axios.delete(`http://127.0.0.1:3000/api/v1/locations/${id}`);
+        await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/api/v1/locations/${id}`);
         toast({ title: 'Success', description: 'Location deleted successfully' });
         fetchLocations();
       } catch (error: any) {
@@ -90,7 +90,7 @@ const AdminLocations = () => {
 
   const handleToggleActive = async (location: Location) => {
     try {
-      await axios.patch(`http://127.0.0.1:3000/api/v1/locations/${location._id}/toggle`);
+      await axios.patch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/locations/${location._id}/toggle`);
       toast({ title: 'Success', description: `Location status updated` });
       fetchLocations();
     } catch (error) {

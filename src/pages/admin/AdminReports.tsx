@@ -21,7 +21,7 @@ const AdminReports = () => {
       setLoading(true);
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get('http://127.0.0.1:3000/api/v1/sales/', {
+        const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/v1/sales/`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -41,7 +41,7 @@ const AdminReports = () => {
     try {
       const token = localStorage.getItem('token');
       await axios.put(
-        `http://127.0.0.1:3000/api/v1/sales/${saleId}`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/v1/sales/${saleId}`,
         { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );

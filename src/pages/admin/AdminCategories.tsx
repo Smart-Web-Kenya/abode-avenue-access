@@ -27,7 +27,7 @@ const AdminCategories = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:3000/api/v1/categories/');
+        const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/v1/categories/`);
         setCategories(response.data);
       } catch (error) {
         console.error('Error fetching categories:', error);
@@ -67,7 +67,7 @@ const AdminCategories = () => {
     }
     
     try {
-      await axios.delete(`http://127.0.0.1:3000/api/v1/categories/${categoryId}`);
+      await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/api/v1/categories/${categoryId}`);
       
       // Remove the category from the local state
       setCategories(categories.filter(cat => cat.id !== categoryId));
@@ -86,7 +86,7 @@ const AdminCategories = () => {
 
   const handleToggleStatus = async (categoryId: string, currentStatus: boolean) => {
     try {
-      const response = await axios.patch(`http://127.0.0.1:3000/api/v1/categories/${categoryId}/status`);
+      const response = await axios.patch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/categories/${categoryId}/status`);
       
       // Update the category in the local state
       setCategories(categories.map(cat => 
@@ -102,7 +102,7 @@ const AdminCategories = () => {
 
   const handleAddCategory = async () => {
     try {
-      const response = await axios.post('http://127.0.0.1:3000/api/v1/categories/', {
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/v1/categories/`, {
         name: newCategory.name,
         description: newCategory.description,
         type: newCategory.type,
@@ -131,7 +131,7 @@ const AdminCategories = () => {
     
     try {
       const response = await axios.put(
-        `http://127.0.0.1:3000/api/v1/categories/${selectedCategory.id}`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/v1/categories/${selectedCategory.id}`,
         {
           name: selectedCategory.name,
           description: selectedCategory.description,

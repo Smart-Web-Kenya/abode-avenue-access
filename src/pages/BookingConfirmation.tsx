@@ -67,7 +67,7 @@ const BookingConfirmation = () => {
       };
 
       // Make the API call to save the sale
-      const response = await fetch('http://127.0.0.1:3000/api/v1/sales', {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/sales`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -127,7 +127,7 @@ const BookingConfirmation = () => {
               <img
                 src={
                   property?.images?.length
-                    ? `http://127.0.0.1:3000/api/v1/properties/${property._id}/image/${property.images[0]._id}`
+                    ? `${import.meta.env.VITE_API_BASE_URL}/api/v1/properties/${property._id}/image/${property.images[0]._id}`
                     : "https://images.unsplash.com/photo-1483058712412-4245e9b90334?w=1200&h=800&fit=crop"
                 }
                 alt={property?.title}
@@ -201,7 +201,7 @@ const BookingConfirmation = () => {
                 )}
               </Button>
 
-              <Link to={`/property/${property?._id}`}>
+              <Link to={`/archive`}>
                 <Button variant="outline" className="border-gray-300 text-gray-600">
                   Cancel
                 </Button>

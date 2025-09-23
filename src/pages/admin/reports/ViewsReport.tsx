@@ -40,7 +40,7 @@ const ViewsReport = () => {
       }
 
       // Fetch properties with views and inquiries
-      const response = await fetch('http://127.0.0.1:3000/api/v1/properties/stats', {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/properties/stats`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',

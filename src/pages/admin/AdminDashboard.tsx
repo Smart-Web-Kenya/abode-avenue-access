@@ -57,7 +57,7 @@ const AdminDashboard = () => {
     const fetchStats = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get('http://127.0.0.1:3000/api/v1/dashboard/stats', {
+        const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/v1/dashboard/stats`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.data.success) {
@@ -78,7 +78,7 @@ const AdminDashboard = () => {
     const fetchRecentProperties = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get('http://127.0.0.1:3000/api/v1/dashboard/recent-properties', {
+        const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/v1/dashboard/recent-properties`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.data.success) {
@@ -99,7 +99,7 @@ const AdminDashboard = () => {
     const fetchRecentBuyers = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get('http://127.0.0.1:3000/api/v1/dashboard/recent-buyers', {
+        const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/v1/dashboard/recent-buyers`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.data.success) {

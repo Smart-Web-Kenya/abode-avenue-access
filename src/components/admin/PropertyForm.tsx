@@ -81,7 +81,7 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
         const token = localStorage.getItem('token');
         
         // Fetch amenities
-        const amenitiesRes = await axios.get('http://127.0.0.1:3000/api/v1/amenities?active=true', {
+        const amenitiesRes = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/v1/amenities?active=true`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Cache-Control': 'no-cache'
@@ -91,7 +91,7 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
         setAmenities(flattenedAmenities);
 
         // Fetch top-level locations (countries)
-        const countriesRes = await axios.get('http://127.0.0.1:3000/api/v1/locations?level=country', {
+        const countriesRes = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/v1/locations?level=country`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Cache-Control': 'no-cache'
@@ -110,7 +110,7 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
     const fetchCurrentUser = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('http://127.0.0.1:3000/api/v1/users/me', {
+        const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/v1/users/me`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Cache-Control': 'no-cache'
@@ -140,7 +140,7 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
       nextLocationsState.areas = [];
       nextLocationsState.subareas = [];
       if (parentId) {
-        const citiesRes = await axios.get(`http://127.0.0.1:3000/api/v1/locations?level=city&parent=${parentId}`, {
+        const citiesRes = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/v1/locations?level=city&parent=${parentId}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
             'Cache-Control': 'no-cache'
@@ -155,7 +155,7 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
       nextLocationsState.areas = [];
       nextLocationsState.subareas = [];
       if (parentId) {
-        const areasRes = await axios.get(`http://127.0.0.1:3000/api/v1/locations?level=area&parent=${parentId}`, {
+        const areasRes = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/v1/locations?level=area&parent=${parentId}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
             'Cache-Control': 'no-cache'
@@ -168,7 +168,7 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
       newLocationState.subArea = { id: '', name: '' };
       nextLocationsState.subareas = [];
       if (parentId) {
-        const subareasRes = await axios.get(`http://127.0.0.1:3000/api/v1/locations?level=subarea&parent=${parentId}`, {
+        const subareasRes = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/v1/locations?level=subarea&parent=${parentId}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
             'Cache-Control': 'no-cache'
@@ -230,7 +230,7 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
   const handleRemoveImage = async (index: number) => {
     const imageToRemove = formData.images[index];
     try {
-      await axios.delete(`http://127.0.0.1:3000/api/v1/properties/image/${imageToRemove.public_id}`, {
+      await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/api/v1/properties/image/${imageToRemove.public_id}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Cache-Control': 'no-cache'
@@ -293,13 +293,13 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
       let response;
       if (property?._id) {
         response = await axios.put(
-          `http://127.0.0.1:3000/api/v1/properties/${property._id}`,
+          `${import.meta.env.VITE_API_BASE_URL}/api/v1/properties/${property._id}`,
           formDataToSend,
           { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'multipart/form-data' } }
         );
       } else {
         response = await axios.post(
-          'http://127.0.0.1:3000/api/v1/properties',
+          `${import.meta.env.VITE_API_BASE_URL}/api/v1/properties`,
           formDataToSend,
           { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'multipart/form-data' } }
         );
@@ -328,7 +328,7 @@ const PropertyForm = ({ onClose, property, onSave }: PropertyFormProps) => {
     const fetchCategories = async () => {
       try {
         setIsLoadingCategories(true);
-        const response = await axios.get('http://127.0.0.1:3000/api/v1/categories', {
+        const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/v1/categories`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
             'Cache-Control': 'no-cache'
