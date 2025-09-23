@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,12 +7,59 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
-import { MapPin, Bath, Bed, Square, Calendar, Car, Wifi, Dumbbell, Shield, Trees, Play, Send } from 'lucide-react';
+import { MapPin, Bath, Bed, Square, Calendar, Car, Wifi, Dumbbell, Shield, Trees, Play, Send, Eye } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { useNavigate } from "react-router-dom";
+import axios from 'axios';
+import { getCurrentUserFromStorage } from '@/services/authService';
+import { getCurrentUser, type User } from '@/services/userService';
+
+interface ApiPropertyImage {
+  _id: string;
+  mimetype: string;
+  isFeatured?: boolean;
+}
+
+interface ApiLocation {
+  country?: string;
+  city?: string;
+  area?: string;
+  subArea?: string;
+}
+
+interface ApiCategoryPopulated {
+  name: string;
+  type: string;
+}
+
+interface ApiProperty {
+  _id: string;
+  title: string;
+  description?: string;
+  price: number;
+  bedrooms: number;
+  bathrooms: number;
+  sqft: number;
+  yearBuilt?: number;
+  location?: ApiLocation;
+  images: ApiPropertyImage[];
+  category?: ApiCategoryPopulated | string;
+  status?: string;
+  active?: boolean;
+  amenities?: string[];
+  video360Url?: string;
+  contactPhones?: string[];
+  views?: number;
+}
 
 const SingleListing = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const [property, setProperty] = useState<ApiProperty | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [bookingForm, setBookingForm] = useState({
     name: '',
     email: '',
@@ -21,53 +67,192 @@ const SingleListing = () => {
     preferredDate: ''
   });
 
+  useEffect(() => {
+    const fetchProperty = async () => {
+      if (!id) return;
+      try {
+        setIsLoading(true);
+        setError(null);
+        const res = await axios.get(`http://127.0.0.1:3000/api/v1/properties/${id}`);
+        setProperty(res.data?.data || null);
+      } catch (err: any) {
+        console.error('Failed to load property', err);
+        setError('Failed to load property.');
+        setProperty(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProperty();
+  }, [id]);
+
+  // Load current user (from storage first, then API if needed)
+  useEffect(() => {
+    const userFromStorage = getCurrentUserFromStorage();
+    if (userFromStorage) {
+      setCurrentUser(userFromStorage);
+      return;
+    }
+    (async () => {
+      try {
+        const res = await getCurrentUser();
+        setCurrentUser(res.data);
+      } catch (e) {
+        // Not logged in or failed to fetch; ignore silently
+        setCurrentUser(null);
+      }
+    })();
+  }, []);
+
+  // Populate booking form defaults when property and/or user data is available
+  useEffect(() => {
+    if (!property && !currentUser) return;
+    setBookingForm((prev) => ({
+      name: prev.name || currentUser?.name || '',
+      email: prev.email || currentUser?.email || '',
+      phone: prev.phone || currentUser?.phone || property?.contactPhones?.[0] || '',
+      preferredDate: prev.preferredDate || new Date().toISOString().slice(0, 10),
+    }));
+  }, [property, currentUser]);
+
   const handleBookingSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle booking submission
-    console.log('Booking submitted:', bookingForm);
-    // Reset form
-    setBookingForm({ name: '', email: '', phone: '', preferredDate: '' });
+    navigate("/booking-confirmation", {
+      state: { bookingForm, property },
+    });
   };
 
-  // Mock property data - in a real app, this would come from an API
-  const property = {
-    id: 1,
-    title: "Modern Downtown Loft",
-    price: 450000,
-    location: "Downtown District, 123 Main Street",
-    bedrooms: 2,
-    bathrooms: 2,
-    sqft: 1200,
-    type: "Apartment",
-    yearBuilt: 2020,
-    parking: 1,
-    featured: true,
-    description: "Experience urban luxury in this stunning downtown loft featuring floor-to-ceiling windows, hardwood floors, and modern finishes throughout. The open-concept design creates a seamless flow between the living, dining, and kitchen areas, perfect for entertaining. The gourmet kitchen boasts stainless steel appliances, quartz countertops, and custom cabinetry.",
-    videoUrl: "https://www.youtube.com/embed/6skh1_il_7I", // Sample video URL
-    images: [
-      "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=1200&h=800&fit=crop",
-      "https://images.unsplash.com/photo-1483058712412-4245e9b90334?w=1200&h=800&fit=crop",
-      "https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=1200&h=800&fit=crop",
-      "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&h=800&fit=crop"
-    ],
-    amenities: [
-      { name: "WiFi Included", icon: Wifi },
-      { name: "Fitness Center", icon: Dumbbell },
-      { name: "Secure Building", icon: Shield },
-      { name: "Rooftop Garden", icon: Trees },
-      { name: "Parking Space", icon: Car }
-    ],
-    agent: {
-      name: "Sarah Johnson",
-      email: "sarah@estatehub.com",
-      phone: "+1 (555) 123-4567",
-      image: "https://images.unsplash.com/photo-1472396961693-142e6e269027?w=200&h=200&fit=crop&crop=face"
-    },
-    coordinates: {
-      lat: 40.7128,
-      lng: -74.0060
-    }
+  const buildImageUrl = (prop: ApiProperty, img: ApiPropertyImage) =>
+    `http://127.0.0.1:3000/api/v1/properties/${prop._id}/image/${img._id}`;
+
+  const buildMapSrc = (prop: ApiProperty) => {
+    const parts = [
+      prop.location?.subArea,
+      prop.location?.area,
+      prop.location?.city,
+      prop.location?.country,
+    ].filter(Boolean);
+    const query = encodeURIComponent(parts.join(', '));
+    return `https://www.google.com/maps?q=${query}&output=embed`;
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="container mx-auto px-4 py-12">
+          {/* Breadcrumb Skeleton */}
+          <div className="h-4 w-64 bg-gray-200 rounded-full mb-6 animate-pulse"></div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Main Content */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Video Skeleton */}
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="h-8 w-64 bg-gray-200 rounded-full mb-4 animate-pulse"></div>
+                <div className="aspect-video bg-gray-100 rounded-lg animate-pulse"></div>
+              </div>
+
+              {/* Gallery Skeleton */}
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="h-8 w-64 bg-gray-200 rounded-full mb-4 animate-pulse"></div>
+                <div className="aspect-video bg-gray-100 rounded-lg animate-pulse"></div>
+                <div className="flex justify-center gap-2 mt-4">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="h-16 w-16 bg-gray-100 rounded-md animate-pulse"></div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Details Skeleton */}
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex justify-between items-start mb-6">
+                  <div>
+                    <div className="h-8 w-64 bg-gray-200 rounded-full mb-2 animate-pulse"></div>
+                    <div className="h-4 w-48 bg-gray-200 rounded-full animate-pulse"></div>
+                  </div>
+                  <div className="h-10 w-32 bg-brand-green/20 rounded-md animate-pulse"></div>
+                </div>
+                
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="text-center">
+                      <div className="h-8 w-8 mx-auto mb-2 bg-gray-200 rounded-full animate-pulse"></div>
+                      <div className="h-6 w-3/4 mx-auto bg-gray-200 rounded-full animate-pulse"></div>
+                      <div className="h-4 w-1/2 mx-auto mt-1 bg-gray-200 rounded-full animate-pulse"></div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="h-4 w-1/4 bg-gray-200 rounded-full animate-pulse"></div>
+                  <div className="h-4 bg-gray-200 rounded-full animate-pulse"></div>
+                  <div className="h-4 w-5/6 bg-gray-200 rounded-full animate-pulse"></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Sidebar Skeleton */}
+            <div className="lg:col-span-1">
+              <div className="sticky top-4 space-y-6">
+                {/* Booking Form Skeleton */}
+                <div className="bg-white rounded-xl shadow-sm p-6">
+                  <div className="h-8 w-48 bg-gray-200 rounded-full mb-6 animate-pulse"></div>
+                  <div className="space-y-4">
+                    {[...Array(4)].map((_, i) => (
+                      <div key={i}>
+                        <div className="h-4 w-20 bg-gray-200 rounded-full mb-2 animate-pulse"></div>
+                        <div className="h-10 w-full bg-gray-100 rounded-md animate-pulse"></div>
+                      </div>
+                    ))}
+                    <div className="h-10 w-full bg-brand-green/20 rounded-md animate-pulse mt-4"></div>
+                  </div>
+                </div>
+
+                {/* Summary Skeleton */}
+                <div className="bg-white rounded-xl shadow-sm p-6">
+                  <div className="h-8 w-48 bg-gray-200 rounded-full mb-6 animate-pulse"></div>
+                  <div className="space-y-3">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="flex justify-between">
+                        <div className="h-4 w-24 bg-gray-200 rounded-full animate-pulse"></div>
+                        <div className="h-4 w-16 bg-gray-200 rounded-full animate-pulse"></div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="container mx-auto px-4 py-12">
+          <div className="text-center text-red-600">{error}</div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!property) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="container mx-auto px-4 py-12">
+          <div className="text-center text-gray-600">Property not found.</div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -88,7 +273,7 @@ const SingleListing = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2">
-            {/* Property Video */}
+            {/* Property Video (always shown; uses API video if available, otherwise default) */}
             <div className="mb-8">
               <Card>
                 <CardHeader>
@@ -100,12 +285,12 @@ const SingleListing = () => {
                 <CardContent>
                   <div className="aspect-video">
                     <iframe
-                      src={property.videoUrl}
-                      title="Property Video Tour"
-                      className="w-full h-full rounded-lg"
-                      frameBorder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allow="autoplay; fullscreen; web-share; xr-spatial-tracking"
                       allowFullScreen
+                      className="w-full h-full rounded-lg"
+                      loading="lazy"
+                      src={property.video360Url || "https://my.matterport.com/show/?m=jm5WwEA3HUN&log=0&help=0&nt=0&play=1&qs=0&brand=1&dh=1&tour=1&gt=1&hr=1&mls=0&mt=1&tagNav=1&pin=1&portal=1&f=1&fp=1&nozoom=0&search=1&wh=0&kb=1&lp=0&title=1&tourcta=1&vr=1&title=0"}
+                      title="Property Video"
                     ></iframe>
                   </div>
                 </CardContent>
@@ -121,17 +306,31 @@ const SingleListing = () => {
                 <CardContent>
                   <Carousel className="w-full">
                     <CarouselContent>
-                      {property.images.map((image, index) => (
-                        <CarouselItem key={index}>
+                      {(property.images && property.images.length > 0
+                        ? property.images
+                        : ([] as ApiPropertyImage[])
+                      ).map((img, index) => (
+                        <CarouselItem key={img._id || index}>
                           <div className="p-1">
                             <img
-                              src={image}
+                              src={buildImageUrl(property, img)}
                               alt={`${property.title} - Image ${index + 1}`}
                               className="w-full h-96 object-cover rounded-lg"
                             />
                           </div>
                         </CarouselItem>
                       ))}
+                      {(!property.images || property.images.length === 0) && (
+                        <CarouselItem>
+                          <div className="p-1">
+                            <img
+                              src="https://images.unsplash.com/photo-1483058712412-4245e9b90334?w=1200&h=800&fit=crop"
+                              alt="Placeholder"
+                              className="w-full h-96 object-cover rounded-lg"
+                            />
+                          </div>
+                        </CarouselItem>
+                      )}
                     </CarouselContent>
                     <CarouselPrevious />
                     <CarouselNext />
@@ -148,15 +347,17 @@ const SingleListing = () => {
                     <CardTitle className="text-2xl mb-2">{property.title}</CardTitle>
                     <div className="flex items-center text-gray-600 mb-4">
                       <MapPin className="h-5 w-5 mr-2" />
-                      <span>{property.location}</span>
+                      <span>
+                        {property.location?.subArea || property.location?.area || property.location?.city || property.location?.country || '—'}
+                      </span>
                     </div>
                   </div>
                   <div className="text-right">
                     <div className="text-3xl font-bold text-brand-green mb-2">
                       Ksh.{property.price.toLocaleString()}
                     </div>
-                    {property.featured && (
-                      <Badge className="bg-brand-green text-white">Featured</Badge>
+                    {property.status && (
+                      <Badge className="bg-brand-green text-white">{property.status}</Badge>
                     )}
                   </div>
                 </div>
@@ -180,8 +381,14 @@ const SingleListing = () => {
                   </div>
                   <div className="text-center">
                     <Calendar className="h-8 w-8 mx-auto mb-2 text-brand-green" />
-                    <div className="text-2xl font-semibold">{property.yearBuilt}</div>
+                    <div className="text-2xl font-semibold">{property.yearBuilt ?? '—'}</div>
                     <div className="text-sm text-gray-600">Year Built</div>
+                  </div>
+                  <div className="flex items-center space-x-4 text-sm text-gray-600">
+                    <div className="flex items-center">
+                      <Eye className="h-4 w-4 mr-1 text-gray-500" />
+                      <span>{property.views || 0} views</span>
+                    </div>
                   </div>
                 </div>
                 
@@ -189,29 +396,31 @@ const SingleListing = () => {
                 
                 <div>
                   <h3 className="text-lg font-semibold mb-4">Description</h3>
-                  <p className="text-gray-700 leading-relaxed">{property.description}</p>
+                  <p className="text-gray-700 leading-relaxed">{property.description || 'No description available.'}</p>
                 </div>
               </CardContent>
             </Card>
 
             {/* Amenities */}
-            <Card className="mb-8">
-              <CardHeader>
-                <CardTitle>Amenities & Features</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {property.amenities.map((amenity, index) => (
-                    <div key={index} className="flex items-center space-x-3">
-                      <amenity.icon className="h-5 w-5 text-brand-green" />
-                      <span>{amenity.name}</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            {Array.isArray(property.amenities) && property.amenities.length > 0 && (
+              <Card className="mb-8">
+                <CardHeader>
+                  <CardTitle>Amenities & Features</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {property.amenities.map((amenity, index) => (
+                      <div key={index} className="flex items-center space-x-3">
+                        <Wifi className="h-5 w-5 text-brand-green" />
+                        <span>{amenity}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
-            {/* Google Maps */}
+            {/* Location */}
             <Card>
               <CardHeader>
                 <CardTitle>Location</CardTitle>
@@ -219,7 +428,7 @@ const SingleListing = () => {
               <CardContent>
                 <div className="aspect-video">
                   <iframe
-                    src={`https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3024.5273!2d${property.coordinates.lng}!3d${property.coordinates.lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNDBCeDEyJzEwLjEiTiA3NMKwMDAnMjEuNiJX!5e0!3m2!1sen!2sus!4v1234567890123`}
+                    src={buildMapSrc(property)}
                     className="w-full h-full rounded-lg"
                     style={{ border: 0 }}
                     allowFullScreen
@@ -249,6 +458,7 @@ const SingleListing = () => {
                       value={bookingForm.name}
                       onChange={(e) => setBookingForm({ ...bookingForm, name: e.target.value })}
                       required
+                      placeholder={currentUser?.name || ''}
                     />
                   </div>
                   <div>
@@ -259,6 +469,7 @@ const SingleListing = () => {
                       value={bookingForm.email}
                       onChange={(e) => setBookingForm({ ...bookingForm, email: e.target.value })}
                       required
+                      placeholder={currentUser?.email || ''}
                     />
                   </div>
                   <div>
@@ -269,6 +480,7 @@ const SingleListing = () => {
                       value={bookingForm.phone}
                       onChange={(e) => setBookingForm({ ...bookingForm, phone: e.target.value })}
                       required
+                      placeholder={currentUser?.phone || property.contactPhones?.[0] || ''}
                     />
                   </div>
                   <div>
@@ -289,36 +501,6 @@ const SingleListing = () => {
               </CardContent>
             </Card>
 
-            {/* Contact Agent Card */}
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle>Contact Agent</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center mb-6">
-                  <img
-                    src={property.agent.image}
-                    alt={property.agent.name}
-                    className="w-20 h-20 rounded-full mx-auto mb-4"
-                  />
-                  <h3 className="font-semibold text-lg">{property.agent.name}</h3>
-                  <p className="text-gray-600 text-sm">Licensed Real Estate Agent</p>
-                </div>
-                
-                <div className="space-y-4">
-                  <Button className="w-full bg-brand-green hover:bg-brand-green/90 text-white">
-                    Schedule Viewing
-                  </Button>
-                  <Button variant="outline" className="w-full">
-                    Call: {property.agent.phone}
-                  </Button>
-                  <Button variant="outline" className="w-full">
-                    Email Agent
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
             {/* Property Summary */}
             <Card>
               <CardHeader>
@@ -328,19 +510,15 @@ const SingleListing = () => {
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Property Type:</span>
-                    <span className="font-medium">{property.type}</span>
+                    <span className="font-medium">{typeof property.category === 'object' ? property.category?.type : '—'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Year Built:</span>
-                    <span className="font-medium">{property.yearBuilt}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Parking Spaces:</span>
-                    <span className="font-medium">{property.parking}</span>
+                    <span className="font-medium">{property.yearBuilt ?? '—'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Price per sq ft:</span>
-                    <span className="font-medium">${Math.round(property.price / property.sqft)}</span>
+                    <span className="font-medium">Ksh.{property.sqft ? Math.round(property.price / property.sqft) : '—'}</span>
                   </div>
                 </div>
               </CardContent>

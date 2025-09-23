@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,19 +8,34 @@ import { Badge } from '@/components/ui/badge';
 import { Search, MapPin, Bath, Bed, Square, Filter } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import axios from 'axios';
 
-import img1 from '@/assets/images/img1.jpg';
-import img2 from '@/assets/images/img2.jpg';
-import img3 from '@/assets/images/img3.webp';
-import img4 from '@/assets/images/img4.webp';
-import img5 from '@/assets/images/img5.png';
-import img6 from '@/assets/images/img6.webp';
-import img7 from '@/assets/images/img7.jpg';
-import img8 from '@/assets/images/img8.jpg';
-import img9 from '@/assets/images/img9.webp';
-import img10 from '@/assets/images/img10.jpg';
-import img11 from '@/assets/images/img11.jpg';
+interface ApiPropertyImage {
+  _id: string;
+  mimetype: string;
+  isFeatured?: boolean;
+}
 
+interface ApiLocation {
+  country?: string;
+  city?: string;
+  area?: string;
+  subArea?: string;
+}
+
+interface ApiProperty {
+  _id: string;
+  title: string;
+  price: number;
+  location?: ApiLocation;
+  bedrooms: number;
+  bathrooms: number;
+  sqft: number;
+  images: ApiPropertyImage[];
+  category?: { name: string; type: string } | string;
+  status?: string;
+  active?: boolean;
+}
 
 const Archive = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -28,80 +43,58 @@ const Archive = () => {
   const [propertyType, setPropertyType] = useState('');
   const [bedrooms, setBedrooms] = useState('');
 
-  const properties = [
-    {
-      id: 1,
-      title: "Savannah Heights",
-      price: 450000,
-      location: "Kiambu Road",
-      bedrooms: 2,
-      bathrooms: 2,
-      sqft: 1200,
-      type: "Apartment",
-      featured: true,
-      image: img11
-    },
-    {
-      id: 2,
-      title: "Luxury Family Home",
-      price: 750000,
-      location: "Nairobi,Buruburu",
-      bedrooms: 4,
-      bathrooms: 3,
-      sqft: 2400,
-      type: "House",
-      featured: true,
-      image: img10
-    },
-    {
-      id: 3,
-      title: "Milimani Gardens",
-      price: 225000,
-      location: "Nakuru, Milimani",
-      bedrooms: 1,
-      bathrooms: 1,
-      sqft: 650,
-      type: "Studio",
-      featured: false,
-      image: img6
-    },
-    {
-      id: 4,
-      title: "Spacious Townhouse",
-      price: 525000,
-      location: "Nairobi, Kileleshwa",
-      bedrooms: 3,
-      bathrooms: 2,
-      sqft: 1800,
-      type: "Townhouse",
-      featured: false,
-      image: img7
-    },
-    {
-      id: 5,
-      title: "Bahari House",
-      price: 1200000,
-      location: "Nairobi, Lavington",
-      bedrooms: 3,
-      bathrooms: 3,
-      sqft: 2200,
-      type: "Penthouse",
-      featured: true,
-      image: img3
-    },
-    {
-      id: 6,
-      title: "Nyota Villa",
-      price: 375000,
-      location: "Nairobi, Westlands",
-      bedrooms: 2,
-      bathrooms: 2,
-      sqft: 1100,
-      type: "Condo",
-      featured: false,
-      image: img2
+  const [properties, setProperties] = useState<ApiProperty[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchAll = async () => {
+      try {
+        setIsLoading(true);
+        const res = await axios.get('http://127.0.0.1:3000/api/v1/properties');
+        setProperties(Array.isArray(res.data?.data) ? res.data.data : []);
+      } catch (err) {
+        console.error('Failed to load properties', err);
+        setProperties([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchAll();
+  }, []);
+
+  const imageUrl = (p: ApiProperty) => {
+    if (!p.images || p.images.length === 0) return 'https://images.unsplash.com/photo-1483058712412-4245e9b90334?w=800&h=600&fit=crop';
+    const img = p.images.find(i => i.isFeatured) || p.images[0];
+    return `http://127.0.0.1:3000/api/v1/properties/${p._id}/image/${img._id}`;
+  };
+
+  // Basic client-side filtering (optional)
+  const filtered = properties.filter(p => {
+    const matchesSearch = !searchQuery ||
+      p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (p.location?.city || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (p.location?.area || '').toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesBeds = !bedrooms || p.bedrooms >= parseInt(bedrooms, 10);
+
+    // Simple price-range parser like "300000-600000" or "1000000+"
+    let matchesPrice = true;
+    if (priceRange) {
+      if (priceRange.endsWith('+')) {
+        const min = parseInt(priceRange.replace('+', ''), 10);
+        matchesPrice = p.price >= min;
+      } else {
+        const [minS, maxS] = priceRange.split('-');
+        const min = parseInt(minS, 10);
+        const max = parseInt(maxS, 10);
+        matchesPrice = p.price >= min && p.price <= max;
+      }
     }
-  ];
+
+    const matchesType = !propertyType || (typeof p.category === 'object' && p.category?.type?.toLowerCase() === propertyType.toLowerCase());
+
+    return matchesSearch && matchesBeds && matchesPrice && matchesType;
+  });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -173,7 +166,7 @@ const Archive = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold text-gray-900">
-              {properties.length} Properties Found
+              {isLoading ? 'Loading properties...' : `${filtered.length} Properties Found`}
             </h1>
             <Select defaultValue="newest">
               <SelectTrigger className="w-48">
@@ -189,43 +182,63 @@ const Archive = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {properties.map((property) => (
-              <Link key={property.id} to={`/listing/${property.id}`} className="block">
+            {isLoading && (
+              <>
+                {[...Array(6)].map((_, i) => (
+                  <div key={`sk-${i}`} className="overflow-hidden rounded-md border bg-white">
+                    <div className="h-48 w-full bg-gray-200 animate-pulse" />
+                    <div className="p-4 space-y-3">
+                      <div className="h-5 w-3/4 bg-gray-200 animate-pulse rounded" />
+                      <div className="flex items-center gap-2">
+                        <div className="h-4 w-4 bg-gray-200 animate-pulse rounded" />
+                        <div className="h-4 w-32 bg-gray-200 animate-pulse rounded" />
+                      </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="h-4 bg-gray-200 animate-pulse rounded" />
+                        <div className="h-4 bg-gray-200 animate-pulse rounded" />
+                        <div className="h-4 bg-gray-200 animate-pulse rounded" />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="h-6 w-24 bg-gray-200 animate-pulse rounded" />
+                        <div className="h-9 w-24 bg-gray-200 animate-pulse rounded" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+            {!isLoading && filtered.map((property) => (
+              <Link key={property._id} to={`/listing/${property._id}`} className="block">
                 <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group h-full">
                   <div className="relative overflow-hidden">
                     <img
-                      src={property.image}
+                      src={imageUrl(property)}
                       alt={property.title}
                       className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                     <div className="absolute top-4 left-4 flex gap-2">
-                      {property.featured && (
-                        <Badge className="bg-brand-green text-white">Featured</Badge>
+                      {/* Optionally display status/category */}
+                      {property.status && (
+                        <Badge className="bg-blue-600 text-white">{property.status}</Badge>
                       )}
-                      <Badge variant="secondary">{property.type}</Badge>
-                    </div>
-                    <div className="absolute top-4 right-4">
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
-                        className="bg-white/80 hover:bg-white"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          // Handle favorite functionality here
-                        }}
-                      >
-                        ♡
-                      </Button>
+                      {typeof property.category === 'object' && property.category?.name && (
+                        <Badge variant="secondary">{property.category.name}</Badge>
+                      )}
                     </div>
                   </div>
                   <CardContent className="p-4">
-                    <h3 className="text-lg font-semibold mb-2 text-gray-900 group-hover:text-brand-green transition-colors">
+                    <h3 className="text-lg font-semibold mb-2 text-gray-900 group-hover:text-blue-600 transition-colors">
                       {property.title}
                     </h3>
-                    <div className="flex items-center text-gray-600 mb-3">
-                      <MapPin className="h-4 w-4 mr-1" />
-                      <span className="text-sm">{property.location}</span>
+                    <div className="flex items-center text-gray-600 mb-2">
+                      <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
+                      <span className="text-sm truncate">
+                        {[
+                          property.location?.area,
+                          property.location?.city,
+                          property.location?.country
+                        ].filter(Boolean).join(', ') || '—'}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between mb-3 text-sm text-gray-600">
                       <div className="flex items-center">
@@ -242,16 +255,12 @@ const Archive = () => {
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-xl font-bold text-brand-green">
+                      <span className="text-xl font-bold text-blue-600">
                         Ksh.{property.price.toLocaleString()}
                       </span>
                       <Button 
                         size="sm" 
-                        className="bg-brand-green hover:bg-orange-700"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                        }}
+                        className="bg-brand-green hover:bg-brand-green/90 text-white"
                       >
                         View Details
                       </Button>
@@ -262,11 +271,11 @@ const Archive = () => {
             ))}
           </div>
           
-          {/* Pagination */}
+          {/* Pagination (placeholder) */}
           <div className="flex justify-center mt-12">
             <div className="flex items-center space-x-2">
               <Button variant="outline" disabled>Previous</Button>
-              <Button className="bg-brand-green text-white">1</Button>
+              <Button className="bg-brand-green hover:bg-brand-green/90 text-white">1</Button>
               <Button variant="outline">2</Button>
               <Button variant="outline">3</Button>
               <Button variant="outline">Next</Button>
