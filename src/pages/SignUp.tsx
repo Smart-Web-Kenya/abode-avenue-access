@@ -88,12 +88,12 @@ const SignUp = () => {
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
-          <Link to="/" className="flex items-center justify-center space-x-2 mb-8">
+          {/* <Link to="/" className="flex items-center justify-center space-x-2 mb-8">
             <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-xl">E</span>
             </div>
             <span className="text-2xl font-bold text-gray-900">EstateHub</span>
-          </Link>
+          </Link> */}
           <h2 className="text-3xl font-bold text-gray-900">Create your account</h2>
           <p className="mt-2 text-sm text-gray-600">
             Join thousands of users finding their dream homes
@@ -238,7 +238,7 @@ const SignUp = () => {
               </div>
 
               <Button variant="outline" className="w-full mt-6" asChild>
-                <Link to="/login">Sign in instead</Link>
+                <Link to="/signin">Sign in instead</Link>
               </Button>
             </div>
           </CardContent>
