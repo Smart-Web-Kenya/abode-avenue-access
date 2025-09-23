@@ -1,35 +1,143 @@
-
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import AdminLayout from '@/components/admin/AdminLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Building, Users, FileText, TrendingUp } from 'lucide-react';
+import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
+import { Building, Users, TrendingUp, FileText } from 'lucide-react';
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
+import { UserRound } from 'lucide-react';
+
+interface Property {
+  _id: string;
+  title: string;
+  price: number;
+  location: string;
+  status: string;
+  images: Array<{ url: string }>;
+  agent: { name: string };
+  createdAt: string;
+}
+
+interface Buyer {
+  _id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  property: {
+    _id: string;
+    title: string;
+    price?: number;
+  };
+  saleDate?: string;
+  amount?: number;
+  status?: string;
+}
 
 const AdminDashboard = () => {
-  const stats = [
+  const [stats, setStats] = useState({
+    totalProperties: 0,
+    activeUsers: 0,
+    propertiesSold: 0,
+    totalBuyers: 0,
+  });
+  
+  const [recentProperties, setRecentProperties] = useState<Property[]>([]);
+  const [recentBuyers, setRecentBuyers] = useState<Buyer[]>([]);
+  const [loading, setLoading] = useState({
+    stats: true,
+    properties: true,
+    buyers: true
+  });
+  const [error, setError] = useState({
+    stats: null,
+    properties: null,
+    buyers: null
+  });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get('http://127.0.0.1:3000/api/v1/dashboard/stats', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data.success) {
+          setStats(res.data.data);
+        }
+      } catch (err) {
+        setError(prev => ({ ...prev, stats: 'Failed to load dashboard statistics' }));
+        console.error('Error fetching stats:', err);
+      } finally {
+        setLoading(prev => ({ ...prev, stats: false }));
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  useEffect(() => {
+    const fetchRecentProperties = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get('http://127.0.0.1:3000/api/v1/dashboard/recent-properties', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data.success) {
+          setRecentProperties(res.data.data);
+        }
+      } catch (err) {
+        setError(prev => ({ ...prev, properties: 'Failed to load recent properties' }));
+        console.error('Error fetching recent properties:', err);
+      } finally {
+        setLoading(prev => ({ ...prev, properties: false }));
+      }
+    };
+
+    fetchRecentProperties();
+  }, []);
+
+  useEffect(() => {
+    const fetchRecentBuyers = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get('http://127.0.0.1:3000/api/v1/dashboard/recent-buyers', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data.success) {
+          setRecentBuyers(res.data.data);
+        }
+      } catch (err) {
+        setError(prev => ({ ...prev, buyers: 'Failed to load recent buyers' }));
+        console.error('Error fetching recent buyers:', err);
+      } finally {
+        setLoading(prev => ({ ...prev, buyers: false }));
+      }
+    };
+
+    fetchRecentBuyers();
+  }, []);
+
+  const statsConfig = [
     {
       title: 'Total Properties',
-      value: '156',
-      change: '+12%',
+      value: stats.totalProperties,
       icon: Building,
       color: 'text-teal-600',
     },
     {
       title: 'Active Users',
-      value: '1,234',
-      change: '+8%',
+      value: stats.activeUsers,
       icon: Users,
       color: 'text-blue-600',
     },
     {
       title: 'Properties Sold',
-      value: '89',
-      change: '+23%',
+      value: stats.propertiesSold,
       icon: TrendingUp,
       color: 'text-green-600',
     },
     {
       title: 'Inquiries',
-      value: '2,456',
-      change: '+15%',
+      value: stats.totalBuyers,
       icon: FileText,
       color: 'text-orange-600',
     },
@@ -45,67 +153,135 @@ const AdminDashboard = () => {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {stats.map((stat) => (
+          {statsConfig.map((stat) => (
             <Card key={stat.title}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">
-                  {stat.title}
-                </CardTitle>
                 <stat.icon className={`h-4 w-4 ${stat.color}`} />
+                <span className="font-semibold">{stat.title}</span>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
-                <p className="text-xs text-green-600 mt-1">
-                  {stat.change} from last month
-                </p>
+                {loading.stats ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="h-4 w-4 animate-spin border-2 border-gray-500 rounded-full"></div>
+                    <span>Loading...</span>
+                  </div>
+                ) : (
+                  <span className="text-2xl font-bold">{stat.value}</span>
+                )}
               </CardContent>
             </Card>
           ))}
         </div>
 
-        {/* Recent Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {/* Recent Properties Table */}
           <Card>
             <CardHeader>
               <CardTitle>Recent Properties</CardTitle>
+              <CardDescription>
+                {loading.properties ? 'Loading...' : `Showing ${recentProperties.length} most recent properties`}
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {[1, 2, 3].map((item) => (
-                  <div key={item} className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
-                    <div className="flex-1">
-                      <p className="font-medium">Modern Downtown Apartment</p>
-                      <p className="text-sm text-gray-500">Added 2 hours ago</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium">Ksh.450,000</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              {error.properties ? (
+                <div className="text-red-500 text-center py-4">{error.properties}</div>
+              ) : loading.properties ? (
+                <div className="flex justify-center py-8">
+                  <div className="h-8 w-8 animate-spin border-2 border-gray-500 rounded-full"></div>
+                </div>
+              ) : recentProperties.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Property</TableHead>
+                        <TableHead>Location</TableHead>
+                        <TableHead>Price</TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {recentProperties.map((property) => (
+                        <TableRow key={property._id}>
+                          <TableCell className="font-medium">{property.title}</TableCell>
+                          <TableCell>{property.location}</TableCell>
+                          <TableCell>Ksh. {property.price?.toLocaleString() || 'N/A'}</TableCell>
+                          <TableCell>
+                            <span className={`px-2 py-1 text-xs rounded-full ${
+                              property.status === 'sold' 
+                                ? 'bg-red-100 text-red-800' 
+                                : 'bg-green-100 text-green-800'
+                            }`}>
+                              {property.status || 'Available'}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  No properties found
+                </div>
+              )}
             </CardContent>
           </Card>
 
+          {/* Recent Buyers */}
           <Card>
             <CardHeader>
-              <CardTitle>Recent Inquiries</CardTitle>
+              <CardTitle>Recent Buyers</CardTitle>
+              <CardDescription>
+                {loading.buyers ? 'Loading...' : `Showing ${recentBuyers.length} most recent buyers`}
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {[1, 2, 3].map((item) => (
-                  <div key={item} className="flex items-center space-x-4">
-                    <div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center">
-                      <Users className="h-4 w-4 text-teal-600" />
+              {error.buyers ? (
+                <div className="text-red-500 text-center py-4">{error.buyers}</div>
+              ) : loading.buyers ? (
+                <div className="flex justify-center py-8">
+                  <div className="h-8 w-8 animate-spin border-2 border-gray-500 rounded-full"></div>
+                </div>
+              ) : recentBuyers.length > 0 ? (
+                <div className="space-y-4">
+                  {recentBuyers.map((buyer) => (
+                    <div key={buyer._id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-medium">{buyer.name || 'Unknown Buyer'}</h3>
+                          <p className="text-sm text-gray-600">{buyer.email || 'No email'}</p>
+                          {buyer.phone && (
+                            <p className="text-sm text-gray-600">{buyer.phone}</p>
+                          )}
+                        </div>
+                        <span className="text-xs text-gray-500">
+                          {buyer.saleDate ? new Date(buyer.saleDate).toLocaleDateString() : 'Date not available'}
+                        </span>
+                      </div>
+                      <div className="mt-2 pt-2 border-t">
+                        <p className="text-sm font-medium">{buyer.property?.title || 'Property not found'}</p>
+                        <div className="flex justify-between items-center mt-1">
+                          <span className="text-sm text-gray-600">
+                            Ksh. {buyer.amount ? buyer.amount.toLocaleString() : 'N/A'}
+                          </span>
+                          <span className={`px-2 py-1 text-xs rounded-full ${
+                            buyer.status === 'completed' 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {buyer.status || 'pending'}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <p className="font-medium">John Doe</p>
-                      <p className="text-sm text-gray-500">Interested in Downtown Loft</p>
-                    </div>
-                    <div className="text-sm text-gray-500">2h ago</div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  No recent buyers found
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
