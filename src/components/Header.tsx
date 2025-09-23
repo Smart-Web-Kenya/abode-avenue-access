@@ -18,7 +18,7 @@ const Header = () => {
       const token = localStorage.getItem('token');
       if (token) {
         try {
-          const res = await axios.get('http://127.0.0.1:3000/api/v1/users/me', {
+          const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/v1/users/me`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           setUser(res.data.data);

@@ -37,7 +37,7 @@ const AdminAmenities = () => {
   const fetchAmenities = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get('http://127.0.0.1:3000/api/v1/amenities');
+      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/v1/amenities`);
       // The API returns amenities grouped by category, so we flatten them
       const flattenedAmenities = Object.values(response.data.data).flat() as Amenity[];
       setAmenities(flattenedAmenities);
@@ -51,7 +51,7 @@ const AdminAmenities = () => {
 
   const fetchIconOptions = async () => {
     try {
-      const response = await axios.get('http://127.0.0.1:3000/api/v1/amenities/icons');
+      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/v1/amenities/icons`);
       setIconOptions(response.data.data);
     } catch (error) {
       console.error('Error fetching icon options:', error);
@@ -65,7 +65,7 @@ const AdminAmenities = () => {
 
   const handleAddAmenity = async () => {
     try {
-      await axios.post('http://127.0.0.1:3000/api/v1/amenities', newAmenity);
+      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/v1/amenities`, newAmenity);
       toast({ title: 'Success', description: 'Amenity added successfully' });
       setIsAddDialogOpen(false);
       fetchAmenities();
@@ -79,7 +79,7 @@ const AdminAmenities = () => {
   const handleUpdateAmenity = async () => {
     if (!selectedAmenity) return;
     try {
-      await axios.put(`http://127.0.0.1:3000/api/v1/amenities/${selectedAmenity._id}`, selectedAmenity);
+      await axios.put(`${import.meta.env.VITE_API_BASE_URL}/api/v1/amenities/${selectedAmenity._id}`, selectedAmenity);
       toast({ title: 'Success', description: 'Amenity updated successfully' });
       setIsEditDialogOpen(false);
       fetchAmenities();
@@ -92,7 +92,7 @@ const AdminAmenities = () => {
   const handleDeleteAmenity = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this amenity?')) {
       try {
-        await axios.delete(`http://127.0.0.1:3000/api/v1/amenities/${id}`);
+        await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/api/v1/amenities/${id}`);
         toast({ title: 'Success', description: 'Amenity deleted successfully' });
         fetchAmenities();
       } catch (error) {
@@ -104,7 +104,7 @@ const AdminAmenities = () => {
 
   const handleToggleActive = async (amenity: Amenity) => {
     try {
-      await axios.patch(`http://127.0.0.1:3000/api/v1/amenities/${amenity._id}/toggle`);
+      await axios.patch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/amenities/${amenity._id}/toggle`);
       toast({ title: 'Success', description: `Amenity ${amenity.active ? 'deactivated' : 'activated'}` });
       fetchAmenities();
     } catch (error) {

@@ -55,7 +55,7 @@ const BlogArticle = () => {
         setError(null);
         
         // Fetch the specific blog post using the correct URL format
-        const response = await fetch(`http://127.0.0.1:3000/api/v1/blogs/${slug}`);
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/blogs/${slug}`);
         
         if (!response.ok) {
           throw new Error('Failed to fetch blog post');

@@ -50,7 +50,7 @@ const Archive = () => {
     const fetchAll = async () => {
       try {
         setIsLoading(true);
-        const res = await axios.get('http://127.0.0.1:3000/api/v1/properties');
+        const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/v1/properties`);
         setProperties(Array.isArray(res.data?.data) ? res.data.data : []);
       } catch (err) {
         console.error('Failed to load properties', err);
@@ -65,7 +65,7 @@ const Archive = () => {
   const imageUrl = (p: ApiProperty) => {
     if (!p.images || p.images.length === 0) return 'https://images.unsplash.com/photo-1483058712412-4245e9b90334?w=800&h=600&fit=crop';
     const img = p.images.find(i => i.isFeatured) || p.images[0];
-    return `http://127.0.0.1:3000/api/v1/properties/${p._id}/image/${img._id}`;
+    return `${import.meta.env.VITE_API_BASE_URL}/api/v1/properties/${p._id}/image/${img._id}`;
   };
 
   // Basic client-side filtering (optional)

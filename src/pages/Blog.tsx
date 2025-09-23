@@ -42,7 +42,7 @@ const Blog = () => {
     const fetchBlogs = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:3000/api/v1/blogs');
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/blogs`);
         
         if (!response.ok) {
           throw new Error('Failed to fetch blogs');

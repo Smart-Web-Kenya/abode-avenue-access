@@ -31,7 +31,7 @@ const AdminUsers = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await axios.get('http://127.0.0.1:3000/api/v1/users', {
+        const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/v1/users`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
         setUsers(res.data.data);
@@ -67,7 +67,7 @@ const AdminUsers = () => {
 
   const handleDelete = async (userId: string) => {
     try {
-      await axios.delete(`http://127.0.0.1:3000/api/v1/users/${userId}`, {
+      await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/api/v1/users/${userId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       setUsers(users.filter(u => u._id !== userId));
@@ -78,7 +78,7 @@ const AdminUsers = () => {
 
   const handleToggleStatus = async (userId: string) => {
     try {
-      const res = await axios.patch(`http://127.0.0.1:3000/api/v1/users/${userId}/status`, {}, {
+      const res = await axios.patch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/users/${userId}/status`, {}, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       setUsers(users.map(u => u._id === userId ? res.data.data : u));
@@ -90,7 +90,7 @@ const AdminUsers = () => {
   const handleAddUser = async () => {
     setIsSubmitting(true);
     try {
-      const res = await axios.post('http://127.0.0.1:3000/api/v1/users', newUser, {
+      const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/v1/users`, newUser, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       setUsers([res.data.data, ...users]); // add new user on top

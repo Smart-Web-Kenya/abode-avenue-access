@@ -73,7 +73,7 @@ const SingleListing = () => {
       try {
         setIsLoading(true);
         setError(null);
-        const res = await axios.get(`http://127.0.0.1:3000/api/v1/properties/${id}`);
+        const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/v1/properties/${id}`);
         setProperty(res.data?.data || null);
       } catch (err: any) {
         console.error('Failed to load property', err);
@@ -123,7 +123,7 @@ const SingleListing = () => {
   };
 
   const buildImageUrl = (prop: ApiProperty, img: ApiPropertyImage) =>
-    `http://127.0.0.1:3000/api/v1/properties/${prop._id}/image/${img._id}`;
+    `${import.meta.env.VITE_API_BASE_URL}/api/v1/properties/${prop._id}/image/${img._id}`;
 
   const buildMapSrc = (prop: ApiProperty) => {
     const parts = [

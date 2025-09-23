@@ -63,7 +63,7 @@ const Index = () => {
     const fetchFeatured = async () => {
       try {
         setIsLoadingFeatured(true);
-        const res = await axios.get('http://127.0.0.1:3000/api/v1/properties/featured');
+        const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/v1/properties/featured`);
         setFeatured(Array.isArray(res.data?.data) ? res.data.data : []);
       } catch (err) {
         console.error('Failed to load featured properties', err);
@@ -78,7 +78,7 @@ const Index = () => {
   const featuredImageUrl = (p: ApiProperty) => {
     if (!p.images || p.images.length === 0) return 'https://images.unsplash.com/photo-1483058712412-4245e9b90334?w=800&h=600&fit=crop';
     const img = p.images.find(i => i.isFeatured) || p.images[0];
-    return `http://127.0.0.1:3000/api/v1/properties/${p._id}/image/${img._id}`;
+    return `${import.meta.env.VITE_API_BASE_URL}/api/v1/properties/${p._id}/image/${img._id}`;
   };
 
   const nextSlide = () => {
@@ -177,7 +177,7 @@ const Index = () => {
             </div>
 
             {/* Call-to-Action Buttons */}
-            <div className="flex gap-4 justify-center flex-wrap animate-fade-in">
+            <div className="hidden flex gap-4 justify-center flex-wrap animate-fade-in">
               <Link to="/archive">
                 <Button size="lg" className="bg-brand-orange hover:bg-brand-orange/90 text-white px-8 py-4 text-lg">
                   View Listings

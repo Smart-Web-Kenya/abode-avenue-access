@@ -33,7 +33,7 @@ const AdminProperties = () => {
     setIsLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://127.0.0.1:3000/api/v1/properties', {
+      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/v1/properties`, {
         params: {
           sort: '-createdAt',
           search: search || undefined,
@@ -111,7 +111,7 @@ const AdminProperties = () => {
     if (!window.confirm('Are you sure you want to delete this property?')) return;
 
     try {
-      await axios.delete(`http://127.0.0.1:3000/api/v1/properties/${propertyId}`, {
+      await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/api/v1/properties/${propertyId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -124,7 +124,7 @@ const AdminProperties = () => {
 
   const handleToggleStatus = async (propertyId: string, currentStatus: boolean) => {
     try {
-      await axios.patch(`http://127.0.0.1:3000/api/v1/properties/${propertyId}/status`, {
+      await axios.patch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/properties/${propertyId}/status`, {
         active: !currentStatus
       }, {
         headers: {

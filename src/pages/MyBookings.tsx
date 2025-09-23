@@ -53,7 +53,7 @@ const MyBookings = () => {
         }
 
         const response = await fetch(
-          `http://127.0.0.1:3000/api/v1/sales/my-bookings`,
+          `${import.meta.env.VITE_API_BASE_URL}/api/v1/sales/my-bookings`,
           {
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -110,7 +110,7 @@ const MyBookings = () => {
       const token = localStorage.getItem("token");
       
       const response = await fetch(
-        `http://127.0.0.1:3000/api/v1/sales/${bookingId}/cancel`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/v1/sales/${bookingId}/cancel`,
         {
           method: 'PATCH',
           headers: {

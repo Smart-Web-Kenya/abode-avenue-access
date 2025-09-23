@@ -10,7 +10,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 
 // API base URL - update this to match your backend URL
-const API_BASE_URL = 'http://localhost:3000/api/v1';
+const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api/v1`
 
 const SignUp = () => {
   const navigate = useNavigate();

@@ -38,13 +38,22 @@ interface Blog {
   content: string;
   author: string;
   authorName: string;
-  featuredImage?: { url: string; altText: string };
+  featuredImage?: {
+    data?: {
+      type: string;
+      data: number[];
+    };
+    mimetype?: string;
+    altText?: string;
+    url?: string;
+  };
   categories: string[];
   tags: string[];
   readTime: number;
   status: string;
   seo: { metaTitle: string; metaDescription: string; keywords: string[] };
   createdAt: string;
+  slug: string;
 }
 
 const getAuthHeaders = () => {
@@ -53,6 +62,15 @@ const getAuthHeaders = () => {
     'Content-Type': 'application/json',
     ...(token ? { 'Authorization': `Bearer ${token}` } : {})
   };
+};
+
+const generateSlug = (str: string): string => {
+  return str
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '') // Remove all non-word chars
+    .replace(/\s+/g, '-')      // Replace spaces with -
+    .replace(/--+/g, '-')      // Replace multiple - with single -
+    .trim();
 };
 
 const BlogsPage = () => {
@@ -92,7 +110,7 @@ const BlogsPage = () => {
     const fetchBlogs = async () => {
       try {
         setLoading(true);
-        const res = await fetch("http://127.0.0.1:3000/api/v1/blogs", {
+        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/blogs`, {
           headers: getAuthHeaders()
         });
         
@@ -172,81 +190,103 @@ const BlogsPage = () => {
 
     try {
       const formDataToSend = new FormData();
-
+      
+      // Generate slug from title
+      const slug = generateSlug(formData.title || '');
+      
       // Append text fields
-      Object.keys(formData).forEach((key) => {
-        if (key === "featuredImage") return; // Skip featuredImage as we handle it separately
-        if (key === "seo") {
-          formDataToSend.append("seo", JSON.stringify(formData[key]));
-        } else if (Array.isArray(formData[key as keyof typeof formData])) {
-          formDataToSend.append(key, JSON.stringify(formData[key as keyof typeof formData]));
-        } else if (formData[key as keyof typeof formData] !== undefined) {
-          formDataToSend.append(key, String(formData[key as keyof typeof formData]));
-        }
-      });
+      formDataToSend.append('title', formData.title || '');
+      formDataToSend.append('slug', slug);
+      formDataToSend.append('excerpt', formData.excerpt || '');
+      formDataToSend.append('content', formData.content || '');
+      formDataToSend.append('readTime', String(formData.readTime || 5));
+      formDataToSend.append('status', formData.status || 'draft');
+      
+      // Handle categories and tags as arrays
+      if (formData.categories) {
+        formDataToSend.append('categories', JSON.stringify(formData.categories));
+      }
+      
+      if (formData.tags) {
+        formDataToSend.append('tags', JSON.stringify(formData.tags));
+      }
 
-      // Append image if selected
+      // Handle SEO data
+      if (formData.seo) {
+        formDataToSend.append('seo', JSON.stringify(formData.seo));
+      }
+
+      // Handle image upload
       if (selectedImage) {
-        formDataToSend.append("featuredImage", selectedImage);
-      } else if (formData.featuredImage?.url) {
-        // If no new image but existing image URL exists, send the existing URL
-        formDataToSend.append("featuredImageUrl", formData.featuredImage.url);
-        formDataToSend.append("featuredImageAlt", formData.featuredImage.altText || "");
+        formDataToSend.append('featuredImage', selectedImage);
+        if (formData.featuredImage?.altText) {
+          formDataToSend.append('altText', formData.featuredImage.altText);
+        }
+      } else if (formData.featuredImage?.altText) {
+        // If only updating alt text without changing the image
+        formDataToSend.append('altText', formData.featuredImage.altText);
       }
 
-      const method = selectedBlog ? "PUT" : "POST";
+      const method = selectedBlog ? 'PUT' : 'POST';
       const url = selectedBlog
-        ? `http://127.0.0.1:3000/api/v1/blogs/${selectedBlog._id}`
-        : "http://127.0.0.1:3000/api/v1/blogs";
+        ? `${import.meta.env.VITE_API_BASE_URL}/api/v1/blogs/${selectedBlog._id}`
+        : `${import.meta.env.VITE_API_BASE_URL}/api/v1/blogs`;
 
-      // Get token from localStorage
-      const token = localStorage.getItem('token');
-      if (!token) {
-        window.location.href = '/login';
-        return;
-      }
+      const headers = getAuthHeaders();
+      // Remove Content-Type header to let the browser set it with the correct boundary
+      delete headers['Content-Type'];
 
-      const res = await fetch(url, {
+      const response = await fetch(url, {
         method,
-        headers: {
-          'Authorization': `Bearer ${token}`
-          // Don't set Content-Type when sending FormData, let the browser set it with boundary
-        },
+        headers,
         body: formDataToSend,
       });
 
-      if (!res.ok) {
-        if (res.status === 401) {
-          window.location.href = '/login';
-          return;
-        }
-        const error = await res.json();
-        throw new Error(error.message || "Failed to save blog");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.message || `Failed to ${selectedBlog ? 'update' : 'create'} blog`
+        );
       }
 
-      const savedBlog = await res.json();
+      const result = await response.json();
+      
+      toast({
+        title: 'Success',
+        description: `Blog ${selectedBlog ? 'updated' : 'created'} successfully`,
+      });
 
-      if (selectedBlog) {
-        setBlogs(blogs.map((b) => (b._id === selectedBlog._id ? savedBlog.data : b)));
-      } else {
-        setBlogs([savedBlog.data, ...blogs]);
-      }
-
+      // Refresh the blogs list
+      const blogsRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/blogs`, {
+        headers: getAuthHeaders(),
+      });
+      const blogsData = await blogsRes.json();
+      setBlogs(blogsData.data || []);
+      
+      // Close the modal and reset form
       setShowCreateModal(false);
-      setSelectedBlog(null);
+      setFormData({
+        title: "",
+        excerpt: "",
+        content: "",
+        author: "",
+        authorName: "Admin User",
+        featuredImage: { url: "", altText: "" },
+        categories: [],
+        tags: [],
+        readTime: 5,
+        status: "draft",
+        seo: { metaTitle: "", metaDescription: "", keywords: [] },
+      });
       setSelectedImage(null);
       setImagePreview(null);
-
+      setSelectedBlog(null);
+    } catch (error) {
+      console.error('Error saving blog:', error);
       toast({
-        title: "Success",
-        description: `Blog ${selectedBlog ? "updated" : "created"} successfully`,
-      });
-    } catch (err) {
-      console.error("Error saving blog:", err);
-      toast({
-        title: "Error",
-        description: err instanceof Error ? err.message : "Failed to save blog",
-        variant: "destructive",
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to save blog',
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -274,7 +314,7 @@ const BlogsPage = () => {
       }
 
       const res = await fetch(
-        `http://127.0.0.1:3000/api/v1/blogs/${selectedBlog._id}`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/v1/blogs/${selectedBlog._id}`,
         { 
           method: "DELETE",
           headers: {
@@ -778,6 +818,17 @@ const BlogsPage = () => {
                             <span className="text-white">Change Image</span>
                           </div>
                         </div>
+                      ) : formData.featuredImage?.url ? (
+                        <div className="relative group">
+                          <img
+                            src={formData.featuredImage.url}
+                            alt={formData.featuredImage.altText || 'Blog featured image'}
+                            className="w-full h-48 object-cover rounded-lg"
+                          />
+                          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span className="text-white">Change Image</span>
+                          </div>
+                        </div>
                       ) : (
                         <div className="space-y-1">
                           <svg
@@ -906,19 +957,18 @@ const BlogsPage = () => {
                       <Input
                         name="seo.keywords"
                         value={formData.seo?.keywords?.join(", ") || ""}
-                        onChange={(e) => {
-                          const keywords = e.target.value
-                            .split(",")
-                            .map((kw) => kw.trim())
-                            .filter(Boolean);
+                        onChange={(e) =>
                           setFormData({
                             ...formData,
                             seo: {
                               ...formData.seo,
-                              keywords,
+                              keywords: e.target.value
+                                .split(",")
+                                .map((kw) => kw.trim())
+                                .filter(Boolean),
                             },
-                          });
-                        }}
+                          })
+                        }
                         placeholder="seo, keywords, blog"
                       />
                     </div>
