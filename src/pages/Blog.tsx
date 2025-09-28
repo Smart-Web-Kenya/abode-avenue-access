@@ -9,6 +9,8 @@ import { format } from 'date-fns';
 import { Search, Calendar, User, ArrowRight } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { ImageIcon } from 'lucide-react';
+
 
 interface Blog {
   _id: string;
@@ -16,7 +18,12 @@ interface Blog {
   excerpt: string;
   slug: string;
   featuredImage?: {
-    url: string;
+    url?: string;
+    data?: {
+      type: string;
+      data: number[];
+    };
+    mimetype?: string;
     altText?: string;
   };
   authorName: string;
@@ -26,6 +33,7 @@ interface Blog {
   categories?: string[];
   category?: string;
   date?: string;
+  status?: string;
 }
 
 const Blog = () => {
@@ -123,7 +131,6 @@ const Blog = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-teal-600 to-teal-700 text-white py-20">
         <div className="container mx-auto px-4 text-center">
@@ -194,20 +201,41 @@ const Blog = () => {
                     }}
                   >
                     <Card className="h-full flex flex-col overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group">
-                      {blog.featuredImage?.url && (
-                        <div className="relative h-48 overflow-hidden">
+                      <div className="relative pt-[56.25%] bg-muted/50 overflow-hidden">
+                        {blog.featuredImage?.data || blog.featuredImage?.url ? (
                           <img
-                            src={blog.featuredImage.url}
-                            alt={blog.featuredImage.altText || blog.title}
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            src={blog.featuredImage?.url || `${import.meta.env.VITE_API_BASE_URL}/api/v1/blogs/${blog._id}/image`}
+                            alt={blog.featuredImage?.altText || blog.title}
+                            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            onError={(e) => {
+                              // Fallback to a placeholder if the image fails to load
+                              const target = e.target as HTMLImageElement;
+                              target.src = '/placeholder-blog.jpg';
+                            }}
                           />
-                          {blog.category && (
-                            <div className="absolute top-4 left-4">
-                              <Badge className="bg-teal-600 text-white">{blog.category}</Badge>
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center bg-muted">
+                            <div className="text-muted-foreground">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="48"
+                                height="48"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="1"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="h-12 w-12 mx-auto"
+                              >
+                                <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+                                <circle cx="8.5" cy="8.5" r="1.5" />
+                                <path d="M21 15l-3.5-3.5L12 17l-3.5-4.5L3 18" />
+                              </svg>
                             </div>
-                          )}
-                        </div>
-                      )}
+                          </div>
+                        )}
+                      </div>
                       <CardContent className="p-6 flex-grow flex flex-col">
                         <h3 className="text-xl font-semibold mb-3 text-gray-900 group-hover:text-teal-600 transition-colors line-clamp-2">
                           {blog.title}

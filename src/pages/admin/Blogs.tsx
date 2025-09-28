@@ -31,6 +31,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+import {ImageIcon} from "lucide-react";
+
 interface Blog {
   _id: string;
   title: string;
@@ -196,21 +198,21 @@ const BlogsPage = () => {
       
       // Append text fields
       formDataToSend.append('title', formData.title || '');
-      formDataToSend.append('slug', slug);
+      formDataToSend.append('slug', slug);  
       formDataToSend.append('excerpt', formData.excerpt || '');
       formDataToSend.append('content', formData.content || '');
       formDataToSend.append('readTime', String(formData.readTime || 5));
       formDataToSend.append('status', formData.status || 'draft');
       
-      // Handle categories and tags as arrays
-      if (formData.categories) {
+      // Append categories and tags as JSON strings if they exist
+      if (formData.categories && formData.categories.length > 0) {
         formDataToSend.append('categories', JSON.stringify(formData.categories));
       }
       
-      if (formData.tags) {
+      if (formData.tags && formData.tags.length > 0) {
         formDataToSend.append('tags', JSON.stringify(formData.tags));
       }
-
+      
       // Handle SEO data
       if (formData.seo) {
         formDataToSend.append('seo', JSON.stringify(formData.seo));
@@ -468,19 +470,20 @@ const BlogsPage = () => {
             <TabsContent value="grid">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {currentBlogs.map((blog) => (
-                  <Card key={blog._id} className="overflow-hidden hover:shadow-md transition-shadow">
-                    {blog.featuredImage?.url && (
-                      <div className="relative h-48 bg-muted">
+                  <Card key={blog._id} className="h-full flex flex-col">
+                    <div className="relative pt-[56.25%] bg-muted/50 rounded-t-md overflow-hidden">
+                      {blog.featuredImage?.data ? (
                         <img
-                          src={blog.featuredImage.url}
+                          src={`${import.meta.env.VITE_API_BASE_URL}/api/v1/blogs/${blog._id}/image`}
                           alt={blog.featuredImage.altText || blog.title}
-                          className="w-full h-full object-cover"
+                          className="absolute inset-0 w-full h-full object-cover"
                         />
-                        <div className="absolute top-2 right-2">
-                          {getStatusBadge(blog.status)}
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+                          <ImageIcon className="h-12 w-12" />
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                     <CardHeader>
                       <div className="flex justify-between items-start gap-2">
                         <CardTitle className="text-lg line-clamp-2">{blog.title}</CardTitle>
