@@ -507,12 +507,18 @@ const BlogsPage = () => {
                 {currentBlogs.map((blog) => (
                   <Card key={blog._id} className="h-full flex flex-col">
                     <div className="relative pt-[56.25%] bg-muted/50 rounded-t-md overflow-hidden">
-                      {blog.featuredImage?.data ? (
-                        <img
-                          src={`${import.meta.env.VITE_API_BASE_URL}/api/v1/blogs/${blog._id}/image`}
-                          alt={blog.featuredImage.altText || blog.title}
-                          className="absolute inset-0 w-full h-full object-cover"
-                        />
+                      {blog.featuredImage ? (
+                       <img
+                       src={`${import.meta.env.VITE_API_BASE_URL}/api/v1/blogs/${blog._id}/image`}
+                       alt={blog.featuredImage.altText || blog.title}
+                       className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                       onError={(e) => {
+                         const target = e.target as HTMLImageElement;
+                         target.src = '/placeholder-blog.jpg';
+                         target.onerror = null;
+                       }}
+                       onLoad={() => console.log('Image loaded successfully:', blog._id)}
+                     />
                       ) : (
                         <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
                           <ImageIcon className="h-12 w-12" />
@@ -543,7 +549,7 @@ const BlogsPage = () => {
                           <Badge variant="outline" className="text-xs">
                             +{blog.categories.length - 2} more
                           </Badge>
-                        )}
+                        )}      
                       </div>
                     </CardHeader>
                     <CardContent>
