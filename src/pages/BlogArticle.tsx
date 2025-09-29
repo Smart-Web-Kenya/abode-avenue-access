@@ -18,17 +18,30 @@ interface BlogPost {
   authorName: string;
   author: string;
   createdAt: string;
-  readTime?: string;
+  readTime?: number;
   categories?: string[];
   featuredImage?: {
-    url: string;
+    data?: any;
+    mimetype?: string;
     altText?: string;
   };
   tags?: string[];
+  meta?: {
+    views: number;
+    likes: number;
+    shares: number;
+  };
+  seo?: {
+    metaTitle?: string;
+    metaDescription?: string;
+    keywords?: string[];
+  };
 }
 
 const BlogArticle = () => {
-  const { slug } = useParams<{ slug: string }>();
+  const { slug } = useParams<{ slug?: string }>();
+  const { id } = useParams<{ id?: string }>();
+  const blogId = slug || id;
   const navigate = useNavigate();
   const [blog, setBlog] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
@@ -43,7 +56,7 @@ const BlogArticle = () => {
 
   useEffect(() => {
     console.log(slug)
-    if (!slug) {
+    if (!blogId) {
       setError('Invalid blog post URL');
       setLoading(false);
       return;
@@ -54,20 +67,31 @@ const BlogArticle = () => {
         setLoading(true);
         setError(null);
         
-        // Fetch the specific blog post using the correct URL format
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/blogs/${slug}`);
+        // First try to fetch by slug
+        // First try to fetch by slug if we have one, otherwise by ID
+        const response = await fetch(
+          slug 
+            ? `${import.meta.env.VITE_API_BASE_URL}/api/v1/blogs/slug/${slug}`
+            : `${import.meta.env.VITE_API_BASE_URL}/api/v1/blogs/${id}`
+        );
         
         if (!response.ok) {
-          throw new Error('Failed to fetch blog post');
-        }
-        
-        const data = await response.json();
-        setBlog(data.data);
-
-        
-        // Fetch related posts (optional)
-        if (data.data.categories?.length > 0) {
-          fetchRelatedPosts(data.data.categories[0], data.data._id);
+          // If not found by slug, try by ID
+          const byIdResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/blogs/${blogId}`);
+          if (!byIdResponse.ok) {
+            throw new Error('Blog post not found');
+          }
+          const byIdData = await byIdResponse.json();
+          setBlog(byIdData.data);
+          if (byIdData.data.categories?.length > 0) {
+            fetchRelatedPosts(byIdData.data.categories[0], byIdData.data._id);
+          }
+        } else {
+          const data = await response.json();
+          setBlog(data.data);
+          if (data.data.categories?.length > 0) {
+            fetchRelatedPosts(data.data.categories[0], data.data._id);
+          }
         }
       } catch (err) {
         console.error('Error fetching blog post:', err);
@@ -206,13 +230,24 @@ const BlogArticle = () => {
       <section className="py-12">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
-            {blog.featuredImage?.url && (
-              <img
-                src={blog.featuredImage.url}
-                alt={blog.featuredImage.altText || blog.title}
-                className="w-full h-96 object-cover rounded-lg mb-8"
-              />
-            )}
+            <div className="w-full h-96 mb-8 rounded-lg overflow-hidden bg-gray-100">
+              {blog.featuredImage ? (
+                <img
+                  src={`${import.meta.env.VITE_API_BASE_URL}/api/v1/blogs/${blog._id}/image`}
+                  alt={blog.featuredImage.altText || blog.title}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = '/placeholder-blog.jpg';
+                    target.onerror = null;
+                  }}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                  <span className="text-gray-500">No image available</span>
+                </div>
+              )}
+            </div>
             
             <div className="prose prose-lg max-w-none">
               <div dangerouslySetInnerHTML={{ __html: blog.content }} />
@@ -245,13 +280,24 @@ const BlogArticle = () => {
                 {relatedPosts.map((post) => (
                   <Link key={post._id} to={`/blog/${post.slug}`} className="block">
                     <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
-                      {post.featuredImage?.url && (
-                        <img
-                          src={post.featuredImage.url}
-                          alt={post.title}
-                          className="w-full h-48 object-cover"
-                        />
-                      )}
+                      <div className="w-full h-48 bg-gray-100">
+                        {post.featuredImage ? (
+                          <img
+                            src={`${import.meta.env.VITE_API_BASE_URL}/api/v1/blogs/${post._id}/image`}
+                            alt={post.title}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = '/placeholder-blog.jpg';
+                              target.onerror = null;
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                            <span className="text-gray-500">No image available</span>
+                          </div>
+                        )}
+                      </div>
                       <CardContent className="p-6">
                         <h3 className="text-xl font-semibold text-gray-900 mb-3 hover:text-teal-600 transition-colors">
                           {post.title}

@@ -40,7 +40,7 @@ const BookingConfirmation = () => {
         throw new Error('This property is not assigned to any agent. Please contact support.');
       }
       
-      // Prepare the sale data
+      // Prepare the sale data without changing property status
       const saleData = {
         property: property?._id,
         propertyDetails: {
@@ -50,7 +50,8 @@ const BookingConfirmation = () => {
             property?.location?.city,
             property?.location?.country
           ].filter(Boolean).join(', '),
-          image: property?.images?.[0]?._id
+          image: property?.images?.[0]?._id,
+          status: property?.status || 'Available' // Include current status without changing it
         },
         price: property?.price,
         agent: property.agent_id,
@@ -63,7 +64,7 @@ const BookingConfirmation = () => {
         date: booking?.preferredDate || new Date().toISOString(),
         commission: 0,
         createdBy: user.id,
-        status: 'pending'
+        status: 'pending' // Sale status is pending until admin confirms
       };
 
       // Make the API call to save the sale

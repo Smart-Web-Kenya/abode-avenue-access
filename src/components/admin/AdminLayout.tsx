@@ -1,3 +1,5 @@
+'use client';
+
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,11 +15,11 @@ import {
   Tag,
   Building
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { getCurrentUserFromStorage, isAuthenticated, logout as authLogout } from '@/services/authService';
 
 interface AdminLayoutProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 interface UserData {

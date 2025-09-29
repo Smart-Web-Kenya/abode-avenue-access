@@ -19,10 +19,7 @@ interface Blog {
   slug: string;
   featuredImage?: {
     url?: string;
-    data?: {
-      type: string;
-      data: number[];
-    };
+    data?: any; // Buffer data from MongoDB
     mimetype?: string;
     altText?: string;
   };
@@ -202,16 +199,17 @@ const Blog = () => {
                   >
                     <Card className="h-full flex flex-col overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group">
                       <div className="relative pt-[56.25%] bg-muted/50 overflow-hidden">
-                        {blog.featuredImage?.data || blog.featuredImage?.url ? (
+                        {blog.featuredImage ? (
                           <img
-                            src={blog.featuredImage?.url || `${import.meta.env.VITE_API_BASE_URL}/api/v1/blogs/${blog._id}/image`}
-                            alt={blog.featuredImage?.altText || blog.title}
+                            src={`${import.meta.env.VITE_API_BASE_URL}/api/v1/blogs/${blog._id}/image`}
+                            alt={blog.featuredImage.altText || blog.title}
                             className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             onError={(e) => {
-                              // Fallback to a placeholder if the image fails to load
                               const target = e.target as HTMLImageElement;
                               target.src = '/placeholder-blog.jpg';
+                              target.onerror = null;
                             }}
+                            onLoad={() => console.log('Image loaded successfully:', blog._id)}
                           />
                         ) : (
                           <div className="absolute inset-0 flex items-center justify-center bg-muted">
