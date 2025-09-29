@@ -63,18 +63,39 @@ const AdminReports = () => {
     setUpdatingId(saleId);
     try {
       const token = localStorage.getItem('token');
-      await axios.put(
+      const response = await axios.put(
         `${import.meta.env.VITE_API_BASE_URL}/api/v1/sales/${saleId}`,
         { status: newStatus },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { 
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          } 
+        }
       );
-      setSales((prev) =>
-        prev.map((sale) =>
-          sale._id === saleId ? { ...sale, status: newStatus } : sale
+      
+      // Update local state with the updated sale
+      setSales(prev => 
+        prev.map(sale => 
+          sale._id === saleId ? response.data.data : sale
         )
       );
+
+      // If status was changed to completed, refresh the properties count
+      if (newStatus === 'completed') {
+        const statsRes = await axios.get(
+          `${import.meta.env.VITE_API_BASE_URL}/api/v1/dashboard/stats`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setActiveListingsCount(statsRes.data.data?.activeProperties || 0);
+      }
     } catch (err) {
-      // Optionally show error
+      console.error('Error updating sale status:', err);
+      // You might want to show an error toast here
     } finally {
       setUpdatingId(null);
     }
