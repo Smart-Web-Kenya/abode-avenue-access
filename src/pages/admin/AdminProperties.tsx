@@ -124,18 +124,48 @@ const AdminProperties = () => {
 
   const handleToggleStatus = async (propertyId: string, currentStatus: boolean) => {
     try {
-      await axios.patch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/properties/${propertyId}/status`, {
-        active: !currentStatus
-      }, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+      const newActiveStatus = !currentStatus;
+      
+      // Optimistically update the UI
+      setProperties(prevProperties =>
+        prevProperties.map(prop =>
+          prop._id === propertyId 
+            ? { ...prop, active: newActiveStatus } 
+            : prop
+        )
+      );
+      
+      // Make the API call
+      const response = await axios.patch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/v1/properties/${propertyId}/toggle`,
+        {},
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
         }
-      });
-      setProperties(properties.map(prop =>
-        prop._id === propertyId ? { ...prop, active: !currentStatus } : prop
-      ));
+      );
+      
+      // If the API call fails, revert the UI
+      if (!response.data || !response.data.success) {
+        throw new Error('Failed to update property status');
+      }
+      
     } catch (error) {
       console.error('Error toggling property status:', error);
+      
+      // Revert the UI on error
+      setProperties(prevProperties =>
+        prevProperties.map(prop =>
+          prop._id === propertyId 
+            ? { ...prop, active: currentStatus } 
+            : prop
+        )
+      );
+      
+      // Show error message to user
+      alert('Failed to update property status. Please try again.');
     }
   };
 
@@ -191,8 +221,9 @@ const AdminProperties = () => {
           <div className="flex items-center space-x-2">
             {isAdmin && (
               <Switch
-                checked={property.active !== false}
-                onCheckedChange={() => handleToggleStatus(property._id, property.active !== false)}
+                checked={property.active === true}
+                onCheckedChange={() => handleToggleStatus(property._id, property.active === true)}
+                aria-label={property.active ? 'Deactivate property' : 'Activate property'}
               />
             )}
             <Button variant="ghost" size="sm">

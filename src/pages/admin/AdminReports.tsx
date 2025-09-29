@@ -10,6 +10,7 @@ const AdminReports = () => {
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [activeListingsCount, setActiveListingsCount] = useState<number>(0);
 
   // Pagination logic
   const [currentPage, setCurrentPage] = useState(1);
@@ -17,6 +18,27 @@ const AdminReports = () => {
   const totalPages = Math.ceil(sales.length / rowsPerPage);
 
   useEffect(() => {
+    const fetchActiveListings = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get(
+          `${import.meta.env.VITE_API_BASE_URL}/api/v1/dashboard/stats`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        // Get the count of active properties from the dashboard stats
+        setActiveListingsCount(res.data.data?.activeProperties || 0);
+      } catch (error) {
+        console.error('Error fetching dashboard stats:', error);
+        setActiveListingsCount(0);
+      }
+    };
+    
+    fetchActiveListings();
+
     const fetchSales = async () => {
       setLoading(true);
       try {
@@ -34,6 +56,7 @@ const AdminReports = () => {
       }
     };
     fetchSales();
+    fetchActiveListings();
   }, []);
 
   const handleStatusChange = async (saleId: string, newStatus: string) => {
@@ -103,7 +126,7 @@ const AdminReports = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">Active Listings</p>
-                  <p className="text-2xl font-bold text-brand-green">-</p>
+                  <p className="text-2xl font-bold text-brand-green">{activeListingsCount}</p>
                 </div>
                 <Eye className="h-8 w-8 text-brand-green" />
               </div>
