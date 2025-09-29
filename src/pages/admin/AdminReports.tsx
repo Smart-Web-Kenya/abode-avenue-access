@@ -10,6 +10,7 @@ const AdminReports = () => {
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [activeListingsCount, setActiveListingsCount] = useState<number>(0);
 
   // Pagination logic
   const [currentPage, setCurrentPage] = useState(1);
@@ -17,6 +18,27 @@ const AdminReports = () => {
   const totalPages = Math.ceil(sales.length / rowsPerPage);
 
   useEffect(() => {
+    const fetchActiveListings = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get(
+          `${import.meta.env.VITE_API_BASE_URL}/api/v1/dashboard/stats`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        // Get the count of active properties from the dashboard stats
+        setActiveListingsCount(res.data.data?.activeProperties || 0);
+      } catch (error) {
+        console.error('Error fetching dashboard stats:', error);
+        setActiveListingsCount(0);
+      }
+    };
+    
+    fetchActiveListings();
+
     const fetchSales = async () => {
       setLoading(true);
       try {
@@ -34,24 +56,46 @@ const AdminReports = () => {
       }
     };
     fetchSales();
+    fetchActiveListings();
   }, []);
 
   const handleStatusChange = async (saleId: string, newStatus: string) => {
     setUpdatingId(saleId);
     try {
       const token = localStorage.getItem('token');
-      await axios.put(
+      const response = await axios.put(
         `${import.meta.env.VITE_API_BASE_URL}/api/v1/sales/${saleId}`,
         { status: newStatus },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { 
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          } 
+        }
       );
-      setSales((prev) =>
-        prev.map((sale) =>
-          sale._id === saleId ? { ...sale, status: newStatus } : sale
+      
+      // Update local state with the updated sale
+      setSales(prev => 
+        prev.map(sale => 
+          sale._id === saleId ? response.data.data : sale
         )
       );
+
+      // If status was changed to completed, refresh the properties count
+      if (newStatus === 'completed') {
+        const statsRes = await axios.get(
+          `${import.meta.env.VITE_API_BASE_URL}/api/v1/dashboard/stats`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setActiveListingsCount(statsRes.data.data?.activeProperties || 0);
+      }
     } catch (err) {
-      // Optionally show error
+      console.error('Error updating sale status:', err);
+      // You might want to show an error toast here
     } finally {
       setUpdatingId(null);
     }
@@ -103,7 +147,7 @@ const AdminReports = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">Active Listings</p>
-                  <p className="text-2xl font-bold text-brand-green">-</p>
+                  <p className="text-2xl font-bold text-brand-green">{activeListingsCount}</p>
                 </div>
                 <Eye className="h-8 w-8 text-brand-green" />
               </div>

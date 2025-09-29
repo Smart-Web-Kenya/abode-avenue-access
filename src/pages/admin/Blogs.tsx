@@ -1,3 +1,5 @@
+// 'use client';
+
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,12 +10,25 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/components/ui/use-toast";
 import { format } from "date-fns";
-import { Search, List, Grid, Calendar, Clock, Tag, Folder, Eye, Edit, Trash2 } from "lucide-react";
+import { 
+  Search, 
+  List, 
+  Grid, 
+  Calendar, 
+  Clock, 
+  Tag as TagIcon, 
+  Folder, 
+  Eye, 
+  Edit, 
+  Trash2,
+  Image as ImageIcon
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -23,7 +38,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,20 +59,26 @@ interface Blog {
   author: string;
   authorName: string;
   featuredImage?: {
-    data?: {
-      type: string;
-      data: number[];
-    };
+    data?: any;
     mimetype?: string;
     altText?: string;
-    url?: string;
   };
   categories: string[];
   tags: string[];
   readTime: number;
-  status: string;
-  seo: { metaTitle: string; metaDescription: string; keywords: string[] };
+  status: 'draft' | 'published' | 'archived';
+  seo?: {
+    metaTitle?: string;
+    metaDescription?: string;
+    keywords?: string[];
+  };
+  meta?: {
+    views: number;
+    likes: number;
+    shares: number;
+  };
   createdAt: string;
+  updatedAt: string;
   slug: string;
 }
 
@@ -120,18 +146,20 @@ const BlogsPage = () => {
             window.location.href = '/login';
             return;
           }
-          throw new Error("Failed to fetch blogs");
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.message || 'Failed to fetch blogs');
         }
         
         const data = await res.json();
-        setBlogs(data.data || []);
+        setBlogs(Array.isArray(data.data) ? data.data : []);
       } catch (err) {
         console.error("Error fetching blogs:", err);
         toast({
           title: "Error",
-          description: "Failed to load blogs",
+          description: err instanceof Error ? err.message : "Failed to load blogs",
           variant: "destructive",
         });
+        setBlogs([]); // Ensure blogs is always an array
       } finally {
         setLoading(false);
       }
@@ -152,6 +180,16 @@ const BlogsPage = () => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setSelectedImage(file);
+
+      // Update form data with file info
+      setFormData(prev => ({
+        ...prev,
+        featuredImage: {
+          ...prev.featuredImage,
+          mimetype: file.type,
+          filename: file.name
+        }
+      }));
 
       // Create preview URL
       const reader = new FileReader();
@@ -196,21 +234,21 @@ const BlogsPage = () => {
       
       // Append text fields
       formDataToSend.append('title', formData.title || '');
-      formDataToSend.append('slug', slug);
+      formDataToSend.append('slug', slug);  
       formDataToSend.append('excerpt', formData.excerpt || '');
       formDataToSend.append('content', formData.content || '');
       formDataToSend.append('readTime', String(formData.readTime || 5));
       formDataToSend.append('status', formData.status || 'draft');
       
-      // Handle categories and tags as arrays
-      if (formData.categories) {
+      // Append categories and tags as JSON strings if they exist
+      if (formData.categories && formData.categories.length > 0) {
         formDataToSend.append('categories', JSON.stringify(formData.categories));
       }
       
-      if (formData.tags) {
+      if (formData.tags && formData.tags.length > 0) {
         formDataToSend.append('tags', JSON.stringify(formData.tags));
       }
-
+      
       // Handle SEO data
       if (formData.seo) {
         formDataToSend.append('seo', JSON.stringify(formData.seo));
@@ -397,52 +435,51 @@ const BlogsPage = () => {
 
   return (
     <AdminLayout>
-
-    <div className="p-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">Blog Management</h1>
-          <p className="text-sm text-muted-foreground">
-            Manage your blog posts and content
-          </p>
-        </div>
-        <div className="flex gap-2 w-full md:w-auto">
-          <div className="relative flex-1 md:w-64">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search blogs..."
-              className="pl-8 w-full"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+      <div className="p-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+          <div>
+            <h1 className="text-2xl font-bold">Blog Management</h1>
+            <p className="text-sm text-muted-foreground">
+              Manage your blog posts and content
+            </p>
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="whitespace-nowrap">
-                {statusFilter === 'all' ? 'All Status' : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setStatusFilter('all')}>
-                All
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatusFilter('published')}>
-                Published
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatusFilter('draft')}>
-                Draft
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatusFilter('archived')}>
-                Archived
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button onClick={openCreateModal} className="whitespace-nowrap">
-            + New Blog
-          </Button>
+          <div className="flex gap-2 w-full md:w-auto">
+            <div className="relative flex-1 md:w-64">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search blogs..."
+                className="pl-8 w-full"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="whitespace-nowrap">
+                  {statusFilter === 'all' ? 'All Status' : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setStatusFilter('all')}>
+                  All
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter('published')}>
+                  Published
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter('draft')}>
+                  Draft
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter('archived')}>
+                  Archived
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button onClick={openCreateModal} className="whitespace-nowrap">
+              + New Blog
+            </Button>
+          </div>
         </div>
-      </div>
 
       <Tabs defaultValue={view} onValueChange={(value) => setView(value as "grid" | "list")}>
         <div className="flex justify-between items-center mb-4">
@@ -468,19 +505,26 @@ const BlogsPage = () => {
             <TabsContent value="grid">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {currentBlogs.map((blog) => (
-                  <Card key={blog._id} className="overflow-hidden hover:shadow-md transition-shadow">
-                    {blog.featuredImage?.url && (
-                      <div className="relative h-48 bg-muted">
-                        <img
-                          src={blog.featuredImage.url}
-                          alt={blog.featuredImage.altText || blog.title}
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute top-2 right-2">
-                          {getStatusBadge(blog.status)}
+                  <Card key={blog._id} className="h-full flex flex-col">
+                    <div className="relative pt-[56.25%] bg-muted/50 rounded-t-md overflow-hidden">
+                      {blog.featuredImage ? (
+                       <img
+                       src={`${import.meta.env.VITE_API_BASE_URL}/api/v1/blogs/${blog._id}/image`}
+                       alt={blog.featuredImage.altText || blog.title}
+                       className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                       onError={(e) => {
+                         const target = e.target as HTMLImageElement;
+                         target.src = '/placeholder-blog.jpg';
+                         target.onerror = null;
+                       }}
+                       onLoad={() => console.log('Image loaded successfully:', blog._id)}
+                     />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+                          <ImageIcon className="h-12 w-12" />
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                     <CardHeader>
                       <div className="flex justify-between items-start gap-2">
                         <CardTitle className="text-lg line-clamp-2">{blog.title}</CardTitle>
@@ -505,7 +549,7 @@ const BlogsPage = () => {
                           <Badge variant="outline" className="text-xs">
                             +{blog.categories.length - 2} more
                           </Badge>
-                        )}
+                        )}      
                       </div>
                     </CardHeader>
                     <CardContent>
@@ -818,10 +862,12 @@ const BlogsPage = () => {
                             <span className="text-white">Change Image</span>
                           </div>
                         </div>
-                      ) : formData.featuredImage?.url ? (
+                      ) : formData.featuredImage?.data || formData.featuredImage?.url ? (
                         <div className="relative group">
                           <img
-                            src={formData.featuredImage.url}
+                            src={formData.featuredImage.data 
+                              ? `data:${formData.featuredImage.mimetype || 'image/jpeg'};base64,${formData.featuredImage.data}`
+                              : formData.featuredImage.url}
                             alt={formData.featuredImage.altText || 'Blog featured image'}
                             className="w-full h-48 object-cover rounded-lg"
                           />
@@ -1015,5 +1061,4 @@ const BlogsPage = () => {
     </AdminLayout>
   );
 };
-
 export default BlogsPage;
